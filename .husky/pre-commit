@@ -1,0 +1,7 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running pre-commit hook"
+
+# TOCONFIGURE
+npm run build && npm run lint && npm run test
