@@ -99,8 +99,13 @@ export class Theme<
 		str.push("}")
 		return str.join("\n")
 	}
-	css({ includeDeps = false }: { includeDeps?: boolean } = {}): string {
-		return this._toCss(includeDeps ? { ...this.value, ...this.dependencies } : this.value)
+	css({ includeDeps = false, onlyDeps = false }: { includeDeps?: boolean, onlyDeps?: boolean } = {}): string {
+		const val = includeDeps
+			? { ...this.value, ...this.dependencies }
+			: onlyDeps
+			? this.dependencies
+			: this.value
+		return this._toCss(val)
 	}
 	// eslint-disable-next-line @typescript-eslint/prefer-readonly
 	private _lastPropertiesSet: string[] = []
