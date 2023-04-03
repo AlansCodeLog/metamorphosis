@@ -94,7 +94,7 @@ export class Theme<
 	private _toCss(val: Record<string, string>): string {
 		const str = [":root {"]
 		for (const key of keys(val)) {
-			str.push(`\t${key}: ${val[key]};`)
+			str.push(`\t--${key}: ${val[key]};`)
 		}
 		str.push("}")
 		return str.join("\n")
