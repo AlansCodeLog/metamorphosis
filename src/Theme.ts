@@ -40,10 +40,10 @@ export class Theme<
 			keyList = keyList.concat(cssKeys)
 		}
 	}
-	set(key: keyof T, value: VarGroup<any> | InterpolatedVars<any, any, any>): void {
+	set(key: keyof T | string, value: VarGroup<any> | InterpolatedVars<any, any, any>): void {
 		this._checkParams({ ...this.rawValue, [key]: value })
 		this.removeDependency(this.rawValue?.[key])
-		this.rawValue[key] = value as T[keyof T] // ???
+		this.rawValue[key as keyof T] = value as T[keyof T]
 		this.addDependency(value)
 		this._onChange()
 		this.notify("change", this.name, key as string, value)
