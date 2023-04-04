@@ -1,4 +1,6 @@
 import { last } from "@alanscodelog/utils"
+// eslint-disable-next-line import/no-namespace
+import * as Format from "Format.js"
 import { InterpolatedVars } from "InterpolatedVars.js"
 import { Theme } from "Theme.js"
 // eslint-disable-next-line import/no-namespace
@@ -10,6 +12,7 @@ import { VarGroup } from "VarGroup.js"
 import { createHslColors } from "./createHslColors.js"
 
 
+const separator = ""
 const enum TYPE {
 	font = "f",
 	color = "c",
@@ -65,7 +68,15 @@ const sizesRem = new InterpolatedVars("rem", Unit.rem, {
 
 const { controls: colorControls, colors } = createHslColors("c", undefined, undefined, undefined, "")
 // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
-const { Yellow, Red, Gray, Blue, Green, Purple, Orange, Cyan, Pink } = colors
+
+const opacities = new InterpolatedVars("cOpacity", Unit.rgba, {
+	start: { r: 0, g: 0, b: 0, a: 0 },
+	end: { r: 0, g: 0, b: 0, a: 1 },
+	steps: 10,
+	roundTo: 3,
+	format: Format.rgba,
+}, separator)
+
 const colorGroup = new VarGroup(TYPE.color, {
 	Warning: [Yellow, "5"],
 	WarningLight: [Yellow, "2"],
@@ -85,6 +96,7 @@ const colorGroup = new VarGroup(TYPE.color, {
 	BgTableRow: [Gray, "1"],
 	Text: [Gray, "8"],
 	TextSecondary: [Gray, "6"],
+	TextShadow: [Gray, "3"],
 	TextFocused: [Blue, "6"],
 	TextDisabled: [Blue, "5"],
 	TextPlaceholder: [Gray, "5"],
@@ -152,5 +164,6 @@ export const baseTheme = new Theme("units-theme", {
 	colorControls,
 	mainControls,
 	fontSizeGroup,
+	opacities,
 })
 
