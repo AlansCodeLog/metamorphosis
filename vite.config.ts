@@ -17,7 +17,7 @@ const typesPlugin = (): PluginOption => ({
 })
 
 // https://vitejs.dev/config/
-export default ({ mode }: { mode: string }) => defineConfig({
+export default async ({ mode }: { mode: string }) => defineConfig({
 	plugins: [
 		babel({
 			babelHelpers: "runtime",

@@ -1,4 +1,3 @@
-/* eslint-disable import/no-namespace */
 import { catchError, testName } from "@alanscodelog/utils"
 import * as Format from "Format.js"
 import { InterpolatedVars } from "InterpolatedVars.js"

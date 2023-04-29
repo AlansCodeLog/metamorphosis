@@ -1,15 +1,14 @@
 import { last } from "@alanscodelog/utils"
-// eslint-disable-next-line import/no-namespace
 import * as Format from "Format.js"
 import { InterpolatedVars } from "InterpolatedVars.js"
-import { Theme } from "Theme.js"
-// eslint-disable-next-line import/no-namespace
-import * as Unit from "Unit.js"
 import { createArrayfromRatio, createArrayInterpolator, createRatioInterpolator } from "utils.js"
 import { Var } from "Var.js"
 import { VarGroup } from "VarGroup.js"
 
 import { createHslColors } from "./createHslColors.js"
+
+import { Theme } from "../Theme.js"
+import * as Unit from "../Unit.js"
 
 
 const separator = ""

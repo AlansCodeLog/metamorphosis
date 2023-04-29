@@ -1,4 +1,4 @@
-import { type MakeOptional, keys } from "@alanscodelog/utils"
+import { keys, type MakeOptional } from "@alanscodelog/utils"
 import { Base } from "Base.js"
 import { getFormatObject } from "private.js"
 import { lerp } from "utils.js"

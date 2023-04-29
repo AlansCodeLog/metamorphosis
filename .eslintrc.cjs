@@ -12,6 +12,7 @@ module.exports = {
 		"docs",
 	],
 	rules: {
+		"import/no-namespace":"off"
 	},
 	settings: {
 		jsdoc: {

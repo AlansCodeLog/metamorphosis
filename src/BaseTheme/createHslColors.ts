@@ -1,10 +1,8 @@
 import { type DeepPartial, keys, override } from "@alanscodelog/utils"
 import { Base } from "Base.js"
-// eslint-disable-next-line import/no-namespace
 import * as Format from "Format.js"
 import { InterpolatedVars } from "InterpolatedVars.js"
 import type { InterpolationOptions } from "types.js"
-// eslint-disable-next-line import/no-namespace
 import * as Unit from "Unit.js"
 import { Var } from "Var.js"
 import { VarGroup } from "VarGroup.js"
