@@ -84,6 +84,9 @@ export class VarGroup<
 	get<TKey extends keyof T>(key: TKey): T[TKey] {
 		return this.rawValue[key]
 	}
+	getKeys(): string[] {
+		return keys(this.rawValue)
+	}
 	private _generateKeys(values: Record<string, any>): string[] {
 		return keys(values).map(key => `${this.name}-${key}`)
 	}

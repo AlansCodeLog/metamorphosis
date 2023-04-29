@@ -53,6 +53,12 @@ export class Theme<
 		delete this.rawValue[key]
 		this._onChange()
 	}
+	get(key: keyof T): VarGroup<any> | InterpolatedVars<any, any, any> {
+		return this.rawValue[key]
+	}
+	getKeys(): string [] {
+		return keys(this.rawValue)
+	}
 	private _getSubDeps(value: (Var<any, any> | InterpolatedVars<any, any> | VarGroup<any>)[]): Record<string, any> {
 		const thisKeys = keys(this.value) // #todo maybe start one level deep initially, would this work?
 		const depsValues: Record<string, any> = {} // #todo pass this down instead of assigning twice
