@@ -2,13 +2,11 @@
 	"name": "metamorphosis",
 	"description": "Helps create css variables and turn them into easily configurable, reactive themes.",
 	"version": "0.0.0-semantically-released",
-	"main": "./dist/index.cjs",
 	"module": "./dist/index.js",
-	"types": "./dist/index.d.ts",
 	"type": "module",
 	"exports": {
-		".": { "types": "./dist/index.d.ts", "require": "./dist/index.cjs", "import": "./dist/index.js" },
-		"./*": { "types": "./dist/*/index.d.ts", "require": "./dist/*/index.cjs", "import": "./dist/*/index.js" }
+		".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+		"./*": { "types": "./dist/*/index.d.ts", "import": "./dist/*/index.js" }
 	},
 	"scripts": {
 		"debug": "ts-node -r tsconfig-paths/register -T --esm",
@@ -97,7 +95,7 @@
 	"release": { "extends": [ "@alanscodelog/semantic-release-config" ] },
 	"commitlint": { "extends": [ "@alanscodelog" ] },
 	"browserslist":"defaults and supports es6-module,maintained node versions",
-	"engines": { "node": ">=14.0.0" },
+	"engines": { "node": ">=18" },
 	"@comments": {
 		"scripts": {
 			"test": "Runs `lint:types` before (so that flags can be passed to the test command) so that we can test type assertions. See expect_type function in @alanscodelog/utils.",
