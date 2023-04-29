@@ -15,10 +15,10 @@ const defaultConfig: ColorConfig = {
 	luminance: {
 		reverse: true,
 		stepAmount: 9,
-		endVariance: -3,
-		endVarianceStep: 3,
+		endVariance: 3,
+		endVarianceStep: 2,
 		startVariance: 3,
-		startVarianceStep: 3,
+		startVarianceStep: -1.5,
 	},
 	saturation: {
 		reverse: true,
@@ -187,6 +187,14 @@ export const createHslColors = <T extends Record<string, number> = {
 
 	const colorVars: Record<string, InterpolatedVars<typeof Unit.hsl>> = {}
 	const controlVars: Record<string, Var<typeof Unit.hsl>> = {}
+	const colorEnd = new Var(
+			`${name}${separator}End`,
+			Unit.hsl,
+			{ h: 0, s: 0, l: 0 },
+			{ format: Format.hsl },
+			separator
+	)
+	controlVars.end = colorEnd
 
 	for (const hueKey of keys(hues)) {
 		const colorStart = new Var(
@@ -201,7 +209,7 @@ export const createHslColors = <T extends Record<string, number> = {
 		controlVars[hueKey] = colorStart
 		colorVars[hueKey] = new InterpolatedVars(`${name}${Base.SEPARATOR}${hueKey}`, Unit.hsl, {
 			start: colorStart,
-			end: { h: 0, s: 0, l: 0 },
+			end: colorEnd,
 			steps: 10,
 			interpolate: opts => fancyInterpolator.interpolate(opts),
 			format: Format.hsl,

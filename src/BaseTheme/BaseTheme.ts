@@ -65,10 +65,11 @@ const sizesRem = new InterpolatedVars("rem", Unit.rem, {
 	interpolate: createRatioInterpolator(sizesRemArray),
 }, "")
 
-const { controls: colorControls, colors } = createHslColors("c", undefined, undefined, undefined, "")
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+const { controls: controlsColorPalette, colors } = createHslColors("c", undefined, undefined, undefined, "")
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { Yellow, Red, Gray, Blue, Green, Purple, Orange, Cyan, Pink } = colors
 
-const opacities = new InterpolatedVars("cOpacity", Unit.rgba, {
+const transparentBlacks = new InterpolatedVars("cBlackT", Unit.rgba, {
 	start: { r: 0, g: 0, b: 0, a: 0 },
 	end: { r: 0, g: 0, b: 0, a: 1 },
 	steps: 10,
@@ -76,7 +77,15 @@ const opacities = new InterpolatedVars("cOpacity", Unit.rgba, {
 	format: Format.rgba,
 }, separator)
 
-const colorGroup = new VarGroup(TYPE.color, {
+const transparentWhites = new InterpolatedVars("cWhiteT", Unit.rgba, {
+	start: { r: 255, g: 255, b: 255, a: 0 },
+	end: { r: 255, g: 255, b: 255, a: 1 },
+	steps: 10,
+	roundTo: 3,
+	format: Format.rgba,
+}, separator)
+
+const controlsColors = new VarGroup(TYPE.color, {
 	Warning: [Yellow, "5"],
 	WarningLight: [Yellow, "2"],
 	WarningDark: [Yellow, "8"],
@@ -86,49 +95,59 @@ const colorGroup = new VarGroup(TYPE.color, {
 	Error: [Red, "5"],
 	ErrorLight: [Red, "2"],
 	ErrorDark: [Red, "7"],
-	Bg: [Gray, "1"],
-	BgLight: [Gray, "0"],
-	BgDark: [Gray, "2"],
-	BgFocused: [Blue, "2"],
+	Bg: [Gray, "0"],
+	BgElement: [Gray, "0"],
+	BgElementLight: [Gray, "1"],
+	BgElementDark: [Gray, "2"],
+	// BgElementSecondary: [Gray, "2"],
+	BgFocused: [Blue, "1"],
 	BgHover: [Blue, "1"],
 	BgDisabled: [Gray, "1"],
 	BgTableRow: [Gray, "1"],
 	Text: [Gray, "8"],
 	TextSecondary: [Gray, "6"],
-	TextShadow: [Gray, "3"],
+	TextShadow: [transparentBlacks, "3"],
+	TextShadowActive: [transparentBlacks, "4"],
+	TextShadowHover: [transparentBlacks, "5"],
+	TextShadowFocused: [transparentBlacks, "3"],
 	TextFocused: [Blue, "6"],
-	TextDisabled: [Blue, "5"],
+	TextHover: [Blue, "6"],
+	TextDisabled: [Gray, "5"],
 	TextPlaceholder: [Gray, "5"],
 	TextPlaceholderFocused: [Gray, "6"],
-	TextActive: [Gray, "6"],
+	TextActive: [Gray, "9"],
 	TextLink: [Blue, "7"],
 	TextLinkFocused: [Blue, "5"],
 	TextLinkVisited: [Purple, "6"],
 	TextHoverShadow: [Gray, "3"],
 	Border: [Gray, "4"],
+	BorderDark: [Gray, "8"],
+	ContrastLight: [Gray, "0"],
+	ContrastDark: [Gray, "9"],
 	BorderFocused: [Blue, "5"],
 	BorderSoft: [Gray, "3"],
 	BorderSoftFocused: [Blue, "3"],
 	BorderDisabled: [Gray, "3"],
 	BorderActive: [Gray, "3"],
 	BorderHover: [Gray, "3"],
-	Shadow: [Gray, "3"],
-	ShadowActive: [Gray, "4"],
-	ShadowHover: [Gray, "5"],
+	Shadow: [transparentBlacks, "3"],
+	ShadowActive: [transparentBlacks, "4"],
+	ShadowHover: [transparentBlacks, "5"],
 	ShadowFocused: [Blue, "2"],
 	Recording: [Red, "7"],
 }, "")
 
-const mainControls = new VarGroup(TYPE.variable, {
+const controlsMain = new VarGroup(TYPE.variable, {
 	PxEnd: sizePxEnd,
 	RemStart: sizeRemStart,
 	RemRatio: sizeRemRatio,
 }, "")
 
-const widthGroup = new VarGroup(TYPE.width, {
-	TextHoverShadow: [sizesRem, "1"],
+const controlsWidths = new VarGroup(TYPE.width, {
+	TextHoverShadow: [sizesPx, "2"],
+	TextShadow: [sizesPx, "3"],
 	Border: [sizesPx, "1"],
-	BorderDark: [sizesPx, "1"],
+	BorderDark: [sizesPx, "2"],
 	BorderRadius: [sizesPx, "5"],
 	Shadow: [sizesPx, "2"],
 	PaddingXXS: [sizesPx, "2"],
@@ -138,18 +157,27 @@ const widthGroup = new VarGroup(TYPE.width, {
 	PaddingL: [sizesPx, "9"],
 	PaddingXl: [sizesPx, "10"],
 	TableGrip: [sizesPx, "4"],
+	Slider: [sizesPx, "9"],
 }, "")
 
-const timeGroup = new VarGroup(TYPE.animation, {
+const controlsTime = new VarGroup(TYPE.animation, {
 	TimeNormal: new Var("Time", Unit.time, 0.2),
 }, "")
 
-const fontSizeGroup = new VarGroup(TYPE.font, {
+const fontSizes = new VarGroup(TYPE.font, {
 	SizeS: [sizesRem, "1"],
 	SizeM: [sizesRem, "2"],
 	SizeL: [sizesRem, "4"],
 	SizeXL: [sizesRem, "6"],
 	SizeXXL: [sizesRem, "8"],
+	LineHeightS: [sizesRem, "2"],
+	LineHeightM: [sizesRem, "3"],
+	LineHeightL: [sizesRem, "4"],
+	LineHeightXL: [sizesRem, "5"],
+	LineHeightXXL: [sizesRem, "9"],
+}, "")
+
+const controlsFont = new VarGroup(TYPE.font, {
 	Family: new Var("family", { _: Unit._str }, "Arial, Helvetica, sans-serif"),
 }, "")
 
@@ -157,12 +185,23 @@ const fontSizeGroup = new VarGroup(TYPE.font, {
  * An example base theme.
  */
 export const baseTheme = new Theme("units-theme", {
-	widthGroup,
-	timeGroup,
-	colorGroup,
-	colorControls,
-	mainControls,
-	fontSizeGroup,
-	opacities,
+	controlsWidths,
+	controlsTime,
+	controlsColors,
+	controlsColorPalette,
+	controlsMain,
+	controlsFont,
+	fontSizes,
+	transparentBlacks,
+	transparentWhites,
+	Yellow,
+	Red,
+	Gray,
+	Blue,
+	Green,
+	Purple,
+	Orange,
+	Cyan,
+	Pink,
 })
 
