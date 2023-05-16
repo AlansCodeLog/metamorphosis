@@ -19,19 +19,19 @@ const typesPlugin = (): PluginOption => ({
 // https://vitejs.dev/config/
 export default async ({ mode }: { mode: string }) => defineConfig({
 	plugins: [
-		babel({
-			babelHelpers: "runtime",
-			extensions: [".js", ".mjs", "ts"],
-			presets: [
-				["@babel/preset-env", {
-					modules: false,
-					useBuiltIns: "usage",
-					debug: true,
-					corejs: packageJson.dependencies["core-js"].slice(1, 4),
-				}],
-			],
-			plugins: ["@babel/plugin-transform-runtime"],
-		}),
+		// babel({
+		// 	babelHelpers: "runtime",
+		// 	extensions: [".js", ".mjs", "ts"],
+		// 	presets: [
+		// 		["@babel/preset-env", {
+		// 			modules: false,
+		// 			useBuiltIns: "usage",
+		// 			debug: true,
+		// 			corejs: packageJson.dependencies["core-js"].slice(1, 4),
+		// 		}],
+		// 	],
+		// 	plugins: ["@babel/plugin-transform-runtime"],
+		// }),
 		// even if we don't use aliases, this is needed to get imports based on baseUrl working
 		tsconfigPaths(),
 		typesPlugin(),
