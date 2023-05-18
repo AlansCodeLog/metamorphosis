@@ -1,58 +1,37 @@
-import type { InterpolatedVars } from "InterpolatedVars.js"
-
-import type { Var } from "./Var.js"
+import type { ControlVar } from "./ControlVar.js"
 
 
-type SingularVarType = Record<"_", any>
-type Primitive = string | boolean | number
-type ValType = [type: any, suffix: string]
-export type TypeToValue<TType extends Record<string, ValType>> = {[key in keyof TType]: TType[key][0] }
+export type Interpolator<T extends ControlVar<any, any> = ControlVar<any, any>> = (options: InterpolatorOptions<T>) => T["value"]
 
+export type KeyNamer = (opts: { i: number, steps: number | number[], totalSteps: number, name: string, keyLimit: number, separator: string }) => string
 
-type Interpolated<T extends Record<string, [any, string]> = Record<string, [any, string]> > = [variable: InterpolatedVars<T, any, any>, index: string]
-
-export type ValueType<TType extends Record<string, ValType>, T, TAllowPrimitive extends boolean = true> =
-	TType extends SingularVarType
-		// if e.g. TType is `{_: [0, "px"]}`, allow instance of Var with that type, a raw `{_: 1}`, the interpolated notation `[Var, index] or `1` if TAllowPrimitive is true
-		? Interpolated<TType> | Var<TType> | T | (TAllowPrimitive extends true ? T[keyof T] : never)
-		// else e.g. TType is`{custom: [0, "px"], keys: ["", ""]}`
-		: TType extends Record<string, any>
-			? {
-				// for each value
-				[key in keyof TType]:
-				// allow it's type
-				TType[key][0]
-				// or allow a Var of that type
-				| (
-					// the first key is also allowed to be typecast as not a primitive for advanced type checking
-					// e.g. `{color: [Unit.rgb, ""]}`
-					// if the key does not extend a primitive, we allow the strictly typed Unit.rgb Var
-					TType[key][0] extends Primitive
-						? Var<{ _: TType[key] }> | Interpolated<{ _: TType[key] }>
-						: Var<TType[key][0]> | Interpolated<TType[key][0]>
-				)
-			}
-			: never
-// : Var<TType> | T
-
-
-// https://www.w3.org/TR/CSS22/syndata.html#value-def-identifier
-// this should be enough
-// https://github.com/tc39/proposal-regexp-unicode-property-escapes
-// match any letters, and non-ascii letter using unicode escapes, or any escaped character
-export const regexVariable = /^([a-zA-Z0-9\p{Letter}_\\-]|\\.)+$/u
-
-
-export type Listener<T> = (name: string, key: string, value: T) => void
-
-
-export type InterpolationOptions<T extends Record<string, any>> = {
-	key: keyof T
+export type InterpolatorOptions<T extends ControlVar<any, any> = ControlVar<any, any>> = {
+	state: any
 	step: number
 	totalSteps: number
 	percent: number
+	steps: number | number[]
 	start: T
 	end: T
-	startValue: T[keyof T]
-	endValue: T[keyof T]
+	keyName: string
+	name: string
+	exclude: string[]
+	roundTo: number | false
 }
+
+export type InterpolatedVarsOptions<T extends ControlVar<any, any> = ControlVar<any, any>> = {
+	interpolator: Interpolator<T>
+	roundTo: number | false
+	keyName: KeyNamer
+	exclude: string[]
+	steps: number | number[]
+	separator: string
+	keyLimit: number
+}
+
+
+export type StopEntry<TUnit extends Record<string, any>> = [percent: number, entry: ControlVar<any, TUnit>]
+
+export type Value<
+	TUnit extends Record<string, any>,
+> = ControlVar <any, TUnit> [] | StopEntry <TUnit> []

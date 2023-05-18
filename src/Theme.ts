@@ -1,129 +1,151 @@
-import { keys, setReadOnly } from "@alanscodelog/utils"
-import { Base } from "Base.js"
-import type { InterpolatedVars } from "InterpolatedVars.js"
-import type { Var } from "Var.js"
-import type { VarGroup } from "VarGroup.js"
+import { keys } from "@alanscodelog/utils"
+
+import { Base } from "./Base.js"
+import type { ControlVar } from "./ControlVar.js"
+import { InterpolatedVars } from "./InterpolatedVars.js"
+import { escapeKey } from "./utils.js"
 
 
-export class Theme<
-	T extends Record<string, VarGroup<any> | InterpolatedVars<any, any, any>>,
-> extends Base<T> {
-	value!: Record<string, string>
-	dependencies!: Record<string, string>
+/**
+ * Creates a theme class for grouping variables and applying them to elements.
+ */
+export class Theme<TValues extends Record<string, InterpolatedVars<any> | ControlVar<any, any>> = Record<string, InterpolatedVars<any> | ControlVar<any, any>>> extends Base {
+	protected ready: boolean = false
 	els: HTMLElement[] = []
-	// eslint-disable-next-line @typescript-eslint/prefer-readonly
-	private _ready: boolean = false
-	constructor(name: Theme<T>["name"], values: T) {
-		super(name)
+	css: Record<string, string> = {}
+	value: TValues = {} as any
+	options: { escapeChar: string } = {
+		/** For replacing invalid css variable key characters. */
+		escapeChar: "-",
+	}
+	protected _listeners: Record<string, (() => void) []> = { change: []}
+	constructor(value: TValues, opts: Partial<Theme<TValues>["options"]> = {}) {
+		super()
+		this.add(value)
+		this.setOpts(opts)
+		this.recompute(false)
+		this.ready = true
+	}
+	setOpts(value: Partial<Theme<TValues>["options"]> = {}): void {
+		this.options = { ...this.options, ...value }
+		if (!this.ready) return
+		this.notify()
+	}
+	add(value: Record<string, ControlVar<any, any> | InterpolatedVars<any> >): void {
+		for (const key of keys(value)) {
+			this._add(key, value[key])
+		}
+	}
+	protected _add(key: string, value: InterpolatedVars<any> | ControlVar<any, any>): void {
+		if (this.value[key]) throw new Error(`Key ${key} already exists in theme. Use set to change the value.`)
+		if (this.ready) { this.value[key]?.removeDep(this) }
 
-		this._checkParams(values)
-		setReadOnly(this, "rawValue", {} as T)
-		for (const key of keys(values)) {
-			this.set(key, values[key])
-		}
-		this._ready = true
-		this._onChange()
-	}
-	private _checkParams(
-		values: T,
-	): void {
-		let keyList: string[] = []
-		for (const key of keys(values)) {
-			const val = values[key]
-			const css = val.value
-			const cssKeys = keys(css)
-			for (const cssKey of cssKeys) {
-				if (keyList.includes(cssKey)) {
-					throw new Error(`Variable ${cssKey} conflicts with another key in the theme.`)
-				}
-			}
-			keyList = keyList.concat(cssKeys)
-		}
-	}
-	set(key: keyof T | string, value: VarGroup<any> | InterpolatedVars<any, any, any>): void {
-		this._checkParams({ ...this.rawValue, [key]: value })
-		this.removeDependency(this.rawValue?.[key])
-		this.rawValue[key as keyof T] = value as T[keyof T]
-		this.addDependency(value)
-		this._onChange()
-		this.notify("change", this.name, key as string, value)
-	}
-	remove(key: keyof T): void {
-		this.removeDependency(this.rawValue?.[key])
-		delete this.rawValue[key]
-		this._onChange()
-	}
-	get(key: keyof T): VarGroup<any> | InterpolatedVars<any, any, any> {
-		return this.rawValue[key]
-	}
-	getKeys(): string [] {
-		return keys(this.rawValue)
-	}
-	private _getSubDeps(value: (Var<any, any> | InterpolatedVars<any, any> | VarGroup<any>)[]): Record<string, any> {
-		const thisKeys = keys(this.value) // #todo maybe start one level deep initially, would this work?
-		const depsValues: Record<string, any> = {} // #todo pass this down instead of assigning twice
-		for (const val of value) {
-			const deps = (val as any)._dependencies as (Var<any, any> | InterpolatedVars<any, any> | VarGroup<any>)[]
-			if (deps.length > 0) {
-				const res = this._getSubDeps(deps)
-				for (const key of keys(res)) {
-					if (!thisKeys.includes(key)) {
-						depsValues[key] = res[key]
-					}
-				}
-			}
-			for (const cssKey of keys(val.value)) {
-				if (!thisKeys.includes(cssKey)) {
-					depsValues[cssKey] = val.value[cssKey]
-				}
-			}
-		}
+		this.value[key as keyof TValues] = value as TValues[keyof TValues]
 
-		return depsValues
+		value.addDep(this)
+
+		if (this.ready) { this.notify() }
 	}
-	protected override _onChange(): void {
-		if (!this._ready) return
-		const raw = this.rawValue
-		const res: Record<string, string> = {}
-		for (const key of keys(raw)) {
-			const entryValue = raw[key].value
-			for (const rawKey of keys(entryValue)) {
-				res[rawKey] = entryValue[rawKey]
-			}
+	remove(key: string): void {
+		if (!this.value[key]) return
+		if (this.ready) { this.value[key]?.removeDep(this) }
+
+		const value = this.value[key]
+		this._generateCss(this.css, key, this.options.escapeChar, value, { remove: true })
+		delete this.value[key]
+
+		// NOTE the use of _, we don't need to recompute other keys
+		if (this.ready) { this.notify() }
+	}
+	set(key: string, value: InterpolatedVars<any> | ControlVar<any, any>): void {
+		if (this.ready) { this.value[key]?.removeDep(this) }
+
+		this.value[key as keyof TValues] = value as TValues[keyof TValues]
+		this._generateCss(this.css, key, this.options.escapeChar, value)
+		value.addDep(this)
+
+		if (this.ready) { this.notify({ recompute: false }) }
+	}
+	protected notify({ recompute = true }: { recompute?: boolean } = {}): void {
+		if (!this.ready) return
+		if (recompute) this.recompute(false)
+
+		for (const listener of this._listeners.change) {
+			listener()
 		}
-		this.value = res
-		this.dependencies = this._getSubDeps(this._dependencies)
 		for (const el of this.els) {
-			this._setInterpolatedVarsOnElement(el)
+			this._lastPropertiesSet = Theme.setElVariables(el, this.css, this._lastPropertiesSet)
 		}
 	}
-	private _toCss(val: Record<string, string>): string {
-		const str = [":root {"]
-		for (const key of keys(val)) {
-			str.push(`\t--${key}: ${val[key]};`)
+	on(type: "change", cb: () => void): void {
+		this._listeners[type].push(cb)
+	}
+	off(type: "change", cb: () => void): void {
+		const i = this._listeners[type].findIndex(cb)
+		if (i > -1) {
+			this._listeners[type].splice(i, 1)
 		}
-		str.push("}")
-		return str.join("\n")
 	}
-	css({ includeDeps = false, onlyDeps = false }: { includeDeps?: boolean, onlyDeps?: boolean } = {}): string {
-		const val = includeDeps
-			? { ...this.value, ...this.dependencies }
-			: onlyDeps
-			? this.dependencies
-			: this.value
-		return this._toCss(val)
+	protected _generateCss(
+		res: Record<string, string>,
+		key: string,
+		sep: string,
+		value: InterpolatedVars<any> | ControlVar<any, any>,
+		{ remove = false }: { remove?: boolean } = {}
+	): void {
+		if (value instanceof InterpolatedVars) {
+			for (const k of Object.keys(value.interpolated)) {
+				if (remove) {
+					delete res[`--${escapeKey(k, sep)}`]
+				} else {
+					res[`--${escapeKey(k, sep)}`] = value.interpolated[k]
+				}
+			}
+		} else {
+			if (remove) {
+				delete res[`--${escapeKey(key, sep)}`]
+			} else {
+				res[`--${escapeKey(key, sep)}`] = value.css
+			}
+		}
 	}
-	// eslint-disable-next-line @typescript-eslint/prefer-readonly
-	private _lastPropertiesSet: string[] = []
-	private _setInterpolatedVarsOnElement(el: HTMLElement): void {
-		for (const prop of this._lastPropertiesSet) {
+
+	/**
+	 * The theme can force dependencies to recompute.
+	 *
+	 * This should not be needed unless you want to recompute based of some external state.
+	 *
+	 * Please file a bug report otherwise.
+	 */
+	recompute(force: boolean = true): void {
+		const res: Record<string, string> = {}
+		for (const [key, val] of Object.entries(this.value)) {
+			if (force) {
+				(val as any).recompute()
+			}
+			this._generateCss(res, key, this.options.escapeChar, val)
+		}
+		this.css = res
+	}
+	protected _lastPropertiesSet: string[] = []
+	// todo move to utils?
+	/**
+	 * Set css variables on an element.
+	 *
+	 * Careful that the css properties are prefixed with `--`, otherwise they might conflict with other style properties.
+	 *
+	 * Can be passed a list of already set properties to remove. Returns a list of properties that were set.
+	 */
+	static setElVariables(el: HTMLElement, css: Record<string, string>, lastPropertiesSet: string[] = []): string[] {
+		for (const prop of lastPropertiesSet) {
 			el.style.removeProperty(prop)
 		}
-		for (const key of keys(this.value)) {
-			const prop = `--${key}`
-			el.style.setProperty(prop, this.value[key])
-			this._lastPropertiesSet.push(prop)
+		const newLastPropertiesSet = []
+		for (const key of keys(css)) {
+			el.style.setProperty(key, css[key])
+			newLastPropertiesSet.push(key)
 		}
+		return newLastPropertiesSet
 	}
 	/**
 	 * Attach to an element and automatically set and update the theme's properties on it.
@@ -132,12 +154,15 @@ export class Theme<
 	 */
 	attach(el: HTMLElement = document.documentElement): void {
 		this.els.push(el)
-		this._setInterpolatedVarsOnElement(el)
+		this._lastPropertiesSet = Theme.setElVariables(el, this.css, this._lastPropertiesSet)
 	}
 	detach(el: HTMLElement = document.documentElement): void {
 		const existing = this.els.indexOf(el)
 		if (existing >= 0) {
 			this.els.splice(existing, 1)
+			for (const prop of this._lastPropertiesSet) {
+				el.style.removeProperty(prop)
+			}
 		} else {
 			// eslint-disable-next-line no-console
 			console.warn("Was not attached to element:", el)
@@ -165,9 +190,9 @@ export class Theme<
 		const fs = await import("fs/promises")
 		const url = await import("url")
 		const location = url.fileURLToPath(new URL(filepath, metaUrl))
+		const css = Object.entries(this.css).map(([key, val]) => `${key}: ${val};`).join("\n")
 
-
-		const content = `/* Auto generated by gen:theme script. For autocomplete purposes only. */\n${this.css()}\n/* todo remove variable deps*/\n${this.css({ onlyDeps: true })}`
+		const content = `/* Auto generated by metamorphisis Theme.write. For autocomplete purposes only. */\n${css}\n`
 		await fs.writeFile(location, content)
 	}
 }

@@ -1,5 +1,4 @@
 import { run } from "@alanscodelog/utils/node"
-import { babel } from "@rollup/plugin-babel"
 import glob from "fast-glob"
 import { builtinModules } from "module"
 import path from "path"
@@ -19,31 +18,21 @@ const typesPlugin = (): PluginOption => ({
 // https://vitejs.dev/config/
 export default async ({ mode }: { mode: string }) => defineConfig({
 	plugins: [
-		// babel({
-		// 	babelHelpers: "runtime",
-		// 	extensions: [".js", ".mjs", "ts"],
-		// 	presets: [
-		// 		["@babel/preset-env", {
-		// 			modules: false,
-		// 			useBuiltIns: "usage",
-		// 			debug: true,
-		// 			corejs: packageJson.dependencies["core-js"].slice(1, 4),
-		// 		}],
-		// 	],
-		// 	plugins: ["@babel/plugin-transform-runtime"],
-		// }),
 		// even if we don't use aliases, this is needed to get imports based on baseUrl working
 		tsconfigPaths(),
 		typesPlugin(),
 	],
+	esbuild: {
+		legalComments: "none",
+	},
 	build: {
 		outDir: "dist",
 		lib: {
-			entry: glob.sync(path.resolve(__dirname, "src/**/*.ts")),
+			entry: glob.sync(path.resolve(__dirname, "src/*.ts")),
 			formats: ["es"],
 		},
 		rollupOptions: {
-			external: [...builtinModules, ...Object.keys((packageJson as any).dependencies ?? {}), ...Object.keys((packageJson as any).peerDependencies ?? {}), /@babel\/runtime/],
+			external: [...builtinModules, ...Object.keys((packageJson as any).dependencies ?? {}), ...Object.keys((packageJson as any).peerDependencies ?? {}), /@babel\/runtime/, /tailwindcss/],
 			output: {
 				preserveModulesRoot: "src",
 				preserveModules: true,
@@ -63,8 +52,8 @@ export default async ({ mode }: { mode: string }) => defineConfig({
 	resolve: {
 		alias: [
 			// absolute path needed because of https://github.com/vitest-dev/vitest/issues/2425
-			{ find: /^@\/(.*)/, replacement: `${path.resolve("src")}/$1/index.ts` },
-			{ find: /^@tests\/(.*)/, replacement: `${path.resolve("tests")}/$1` },
+			// { find: /^@\/(.*)/, replacement: `${path.resolve("src")}/$1/index.ts` },
+			// { find: /^@tests\/(.*)/, replacement: `${path.resolve("tests")}/$1` },
 		],
 	},
 	server: {

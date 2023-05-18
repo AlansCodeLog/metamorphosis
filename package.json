@@ -2,87 +2,89 @@
 	"name": "metamorphosis",
 	"description": "Helps create css variables and turn them into easily configurable, reactive themes.",
 	"version": "0.0.0-semantically-released",
-	"module": "./dist/index.js",
 	"type": "module",
+	"module": "./dist/index.js",
 	"exports": {
-		".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
-		"./*": { "types": "./dist/*/index.d.ts", "import": "./dist/*/index.js" }
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./*": {
+			"types": "./dist/*.d.ts",
+			"import": "./dist/*.js"
+		}
 	},
 	"scripts": {
 		"debug": "ts-node -r tsconfig-paths/register -T --esm",
-
 		"build": "vite build",
 		"build:dev": "vite build --mode development",
 		"build:watch": "vite build --watch --mode production",
 		"build:types": "tsc -p tsconfig.types.json && npm run build:types:fix",
 		"build:types:fix": "tsc-alias -p tsconfig.types.json --debug",
-
 		"lint:eslint": "eslint \"{src,tests,bin}/**/*.{cjs,js,ts}\" \"*.{cjs,js,ts}\" --max-warnings=0 --report-unused-disable-directives",
 		"lint:types": "tsc --noEmit --pretty",
 		"lint:commits": "commitlint --from $(git rev-list HEAD --not --remotes | tail -1)^ --to HEAD --verbose",
 		"lint:imports": "madge --circular --extensions ts ./src",
-		"lint": "npm run lint:types && npm run lint:eslint",
-
+		"lint": "npm run lint:types && npm run lint:eslint && npm lint:imports",
 		"coverage": "vitest --coverage",
 		"coverage:dev": "vitest --watch --coverage",
-
 		"test": "npm run lint:types && vitest run",
 		"test:watch": "vitest --watch",
-		"test:inspect-errors": "cross-env INSPECT_ERRORS=true npm run test",
-
 		"doc": "typedoc --options typedoc.config.cjs",
 		"doc:watch": "onchange -i \"src/**/*.ts\" \"typedoc.config.cjs\" -- npm run doc",
 		"doc:serve": "http-server docs --port=5001",
 		"doc:dev": "concurrently \"npm run doc:watch\" \"npm run doc:serve\"",
 		"doc:check-invalid": "typedoc --options typedoc.config.cjs --listInvalidSymbolLinks",
-
 		"actions:debug": "act -r -v -j build-only",
-		"prepare": "husky install && npm run build",
-		"gen:exports": "indexit update --ignore **.d.ts {Unit,Format}.ts -o '${path}.js'"
+		"prepare": "npm exec husky install && npm run build",
+		"gen:exports": "indexit update --ignore {Units,utils,internal}.ts -o '${path}.js'"
 	},
 	"dependencies": {
-		"@alanscodelog/utils": "^4.0.0-beta.2",
-		"core-js":"^3.30.1"
+		"@alanscodelog/utils": "^4.0.0-beta.4"
+	},
+	"peerDependencies": {
+		"colorjs.io": "^0.4.3",
+		"tailwindcss": "^3.3.2"
+	},
+	"peerDependenciesMeta": {
+		"colorjs.io": { "optional": true },
+		"tailwindcss": { "optional": true }
 	},
 	"devDependencies": {
 		"@alanscodelog/commitlint-config": "^2.0.0",
 		"@alanscodelog/eslint-config": "^4.0.2",
 		"@alanscodelog/semantic-release-config": "^2.0.1",
 		"@alanscodelog/tsconfigs": "^3.1.3",
-		"@babel/core": "^7.21.5",
-		"@babel/plugin-transform-runtime": "^7.21.4",
-		"@babel/preset-env": "^7.21.5",
-		"@babel/runtime": "^7.21.5",
-		"@rollup/plugin-babel": "^6.0.3",
 		"@types/node": "^18.16.3",
 		"@typescript-eslint/eslint-plugin": "^5.59.1",
 		"@typescript-eslint/parser": "^5.59.1",
 		"@vitest/coverage-c8": "^0.30.1",
 		"@vue/eslint-config-typescript": "^11.0.3",
+		"colorjs.io": "^0.4.3",
 		"commitlint": "^17.6.1",
 		"concurrently": "^8.0.1",
 		"cross-env": "^7.0.3",
+		"eslint": "^8.39.0",
 		"eslint-import-resolver-typescript": "^3.5.5",
 		"eslint-plugin-import": "^2.27.5",
 		"eslint-plugin-jsdoc": "^39.6.4",
 		"eslint-plugin-simple-import-sort": "^10.0.0",
 		"eslint-plugin-vue": "^9.11.0",
-		"eslint": "^8.39.0",
 		"fast-glob": "^3.2.12",
 		"http-server": "^14.1.1",
 		"husky": "^8.0.3",
-		"indexit":"beta",
-		"jsdom":"^21.1.1",
-		"madge":"^6.0.0",
+		"indexit": "beta",
+		"jsdom": "^21.1.1",
+		"madge": "^6.0.0",
 		"onchange": "^7.1.0",
 		"semantic-release": "^21.0.2",
+		"tailwindcss": "^3.3.2",
 		"ts-node": "^10.9.1",
 		"tsc-alias": "^1.8.6",
-		"type-fest":"^3.9.0",
 		"typedoc": "^0.24.6",
 		"typescript": "^5.0.4",
-		"vite-tsconfig-paths":"^4.2.0",
 		"vite": "^4.3.3",
+		"vite-tsconfig-paths": "^4.2.0",
 		"vitest": "^0.30.1"
 	},
 	"author": "Alan <alanscodelog@gmail.com>",
@@ -94,17 +96,15 @@
 	],
 	"release": { "extends": [ "@alanscodelog/semantic-release-config" ] },
 	"commitlint": { "extends": [ "@alanscodelog" ] },
-	"browserslist":"defaults and supports es6-module,maintained node versions",
 	"engines": { "node": ">=18" },
 	"@comments": {
+		"peerDependencies": "colorsjs.io is only needed if using the base theme",
 		"scripts": {
 			"test": "Runs `lint:types` before (so that flags can be passed to the test command) so that we can test type assertions. See expect_type function in @alanscodelog/utils.",
 			"lint:commits": "Lints all unpushed commits in the active branch.",
-			"test:inspect-errors": "For use with my inspect_error utility function from @alanscodelog/utils",
 			"prepare": "Needed so that if we pull the package from git it will get built and installed properly.",
 			"actions:debug": "For debugging github build action locally with nektos/act. Requires act and docker. Note: Cache will never work locally because of https://github.com/nektos/act/issues/285"
 		}
 	},
 	"private": false
 }
-

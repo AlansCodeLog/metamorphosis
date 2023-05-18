@@ -1,173 +1,196 @@
-import { keys, type MakeOptional } from "@alanscodelog/utils"
-import { Base } from "Base.js"
-import { getFormatObject } from "private.js"
-import { lerp } from "utils.js"
-import { Var } from "Var.js"
+import { isBlank } from "@alanscodelog/utils"
 
-import { str as strFormat } from "./Format.js"
-import { type InterpolationOptions, regexVariable } from "./types.js"
+import { Base } from "./Base.js"
+import type { ControlVar } from "./ControlVar.js"
+import { getTotalSteps } from "./internal.js"
+import type { InterpolatedVarsOptions, StopEntry, Value } from "./types.js"
+import { defaultKeyNamer, lerp } from "./utils.js"
+
+
+const getStepPercent = (percent: number, startPercent: number, endPercent: number): number => {
+	// the percentage into the stop
+	let stopPercent = (percent - startPercent)
+	let stopPercentTotal = (endPercent - startPercent)
+	// if the first stop percentage > 0, this still be < 0, clamp to 0%
+	if (stopPercent < 0) stopPercent = 0
+	// if the last stop percentage < 1
+	// stopPercentageTotal will be 0 causing division by 0, clamp to 100%
+	if (stopPercentTotal === 0) {
+		stopPercent = 1
+		stopPercentTotal = 1
+	}
+
+	return stopPercent / stopPercentTotal
+}
 
 /**
- * For creating ranges of variables (e.g. gray-0, gray-10).
- *
- * This is not very interesting on it's own, but InterpolatedVars tracks it's start/end properties as dependencies, and when they change it gets notified. So we can do things like expose one or two control variable to users while internally using the generated value ranges.
+ * Creates a list of interpolated values from a given list of {@link ControlVar}s.
  *
  * ```ts
- * const grays = new InterpolatedVars("gray", Unit.rgb,
- * 	{ start: whiteRgbVar, end: blackRgbVar, steps: 10, format: Format.rgb }
- * )
- * // grays.value = {
- * // 	gray-0: rgb(255, 255, 255)
- * // 	...
- * // 	gray-10: rgb(0, 0, 0)
- * // }
  *
- * // this example can be found in full in the readme
+ * const v1 = new ControlVar(Units.num, 0)
+ * const v2 = new ControlVar(Units.num, 100)
+ *
+ * const interpolated = new InterpolatedVars("spacing", Units.px, [v1, v2])
+ * // interpolates from 0-100
+ *
+ * v1.set(50) // interpolated will now update to interpolate from 50-100
  * ```
  *
- * Basic interpolation utilities for number based properties are included, as well as some utilities for more advanced interpolation techniques. See {@link Utils}.
+ * It can be passed multiple stops.
+ * ```ts
+ * const interpolated = new InterpolatedVars("spacing", Units.px, [v1, v2, v3])
+ * ```
  *
- * Or you can write completely custom interpolations. A complex interpolator for hsl colors with different variance per property can be found in the example base theme. See {@link https://github.com/AlansCodeLog/metamorphosis/blob/master/src/BaseTheme/createHslColors.ts createHslColors.ts}
+ * ... or stops with positions (otherwise they are evenly spaced).
+ *
+ * ```ts
+ *	// positions should be in a 0-1 percentage range
+ * const interpolated = new InterpolatedVars("spacing", Units.px, [[0, v1], [0.2, v2], [1, v3]])
+ * ```
+ *
+ *
+ * You can change interpolation control variables and any options using `set`:
+ *
+ * ```ts
+ * interpolated.set("values", [vOther1, vOther2, vOther3])
+ * interpolated.set("options", {steps: 20})
+ * ```
  */
-// TODO * You can also define other variables the interpolation depends upon, when they change, the change will ripple up the hierarchy.
 
 export class InterpolatedVars<
-	TType extends
-		Record<string, [any, string]> =
-		Record<string, [any, string]>,
-	TKeys extends
-		keyof TType =
-		keyof TType,
-	T extends
-		{[key in TKeys]: TType[key][0] } =
-		{[key in TKeys]: TType[key][0] },
-> extends Base<undefined, T[]> {
-	type: TType
-	value!: Record<string, string>
-	// wut
-	// eslint-disable-next-line @typescript-eslint/prefer-readonly
-	private _ready: boolean = false
-	options: {
-		start: Var<TType> | number | T
-		end: Var<TType> | number | T
-		steps: number
-		only?: (keyof TType)[] // don't use TKeys we dont' want to modify it's type
-		interpolate?: (options: InterpolationOptions<T>) => any
-		roundTo: number | false
-		// value is always a string because we've already converted it
-		// format should NOT be responsible for units
-		format: (t: {[key in TKeys]: string }) => string
-		/** Customize how the variables are numbered. */
-		numbering?: (i: number) => number | string
-	} = {} as any
+	TUnit extends Record<string, any> = Record<string, any>,
+> extends Base {
+	name: string
+	unit: (value: TUnit) => string
+	values!: Value<TUnit>
+	ready: boolean = false
+	value: Record<string, any>[] = []
+	interpolated: Record<string, string> = {}
+	options: InterpolatedVarsOptions<ControlVar<any, TUnit>> = {
+		roundTo: 3,
+		exclude: [],
+		keyLimit: 10,
+		keyName: defaultKeyNamer,
+		interpolator: lerp as any,
+		separator: "-",
+		steps: 10,
+	}
 	constructor(
-		name: InterpolatedVars<TType, TKeys, T>["name"],
-		type: InterpolatedVars<TType, TKeys, T>["type"],
-		opts: MakeOptional<InterpolatedVars<TType, TKeys, T>["options"], "steps" | "format" | "roundTo" | "numbering">,
-		separator?: string
+		name: string,
+		unit: (value: TUnit) => string,
+		values: Value<TUnit>,
+		options: Partial<InterpolatedVarsOptions<ControlVar<any, TUnit>>> = {}
 	) {
-		super(name, separator)
-		this._checkParams(name, type, opts)
+		super()
+		if (isBlank(name)) throw new Error("Name cannot be blank.")
 
-		this.type = type
-
-		this.options = { roundTo: 2, includeZero: false, ...opts, start: undefined, end: undefined } as any
-		this.set("start", opts.start)
-		this.set("end", opts.end)
-
-		if (!opts.format) this.options.format = strFormat as any
-		if (!opts.steps) this.options.steps = (this.options.end as number) - (this.options.start as number)
-		this._ready = true
-		this._onChange()
+		this.name = name
+		this.unit = unit
+		this.set(values)
+		this.setOpts(options)
+		this.ready = true
+		this.notify()
 	}
-	/**
-	 * Only the absolute necessary checks are made. The rest is left up to typescript since we can type the parameters pretty strictly.
-	 */
-	private _checkParams(
-		name: InterpolatedVars<TType, TKeys, T>["name"],
-		type: InterpolatedVars<TType, TKeys, T>["type"],
-		opts: MakeOptional<InterpolatedVars<TType, TKeys, T>["options"], "steps" | "format" | "roundTo" | "numbering">
-	): void {
-		if (!name.match(regexVariable)) {
-			throw new Error(`Invalid variable name: ${name}`)
-		}
-		if ((typeof opts.start !== "number" || typeof opts.end !== "number") && opts.steps === undefined) {
-			throw new Error(`Steps option must be specified if start or end are ${this.constructor.name} instances.`)
-		}
-		if (typeof opts.start !== "number" && opts.start === opts.end) {
-			throw new Error(`Start and end options cannot be the same instance`)
-		}
-		const typeKeys = Object.keys(type)
-		const isSingleVarType = typeKeys.length === 1 && typeKeys[0] === "_"
-		if (!isSingleVarType) {
-			if (opts.format === undefined) {
-				throw new Error(`Must specify formatter for ${name} if value is an object.`)
+	setOpts(value: Partial<InterpolatedVarsOptions<ControlVar<any, TUnit>>>): void {
+		this.options = { ...this.options, ...value }
+		if (this.ready) { this.notify() }
+	}
+	set(value: Value<TUnit>): void {
+		// :/ https://github.com/microsoft/TypeScript/issues/50652
+		type Stop = StopEntry<TUnit>
+
+		const hasStops = Array.isArray(value[0])
+		if (this.ready) {
+			for (const val of this.values) {
+				const v = hasStops ? (val as Stop)[1] : val as ControlVar<any, TUnit>
+				v?.removeDep(this)
 			}
 		}
-	}
-	convertLimitToType(limit: any): Record<string, any> {
-		const res: any = {}
-		for (const key of keys(this.type)) {
-			if (this.options.only && !this.options.only.includes(key as any)) {continue}
-			res[key] = limit
+		if (hasStops && (value as Stop[]).find(entry => entry[0] > 1) !== undefined) {
+			throw new Error("Stop Entry percentage must be expressed in a value from 0 to 1.")
 		}
 
-		return res
-	}
-	getLimit(rawLimit: InterpolatedVars<TType, TKeys>["options"]["start"]): T {
-		const optsStart = rawLimit
-		return (optsStart instanceof Var
-			? optsStart.rawValue
-			: typeof optsStart === "object"
-			? optsStart
-			: this.convertLimitToType(optsStart)) as T
-	}
-	private _roundIfNeeded(num: number): any {
-		if (this.options.roundTo !== false && this.options.roundTo > -1) {
-			return (+num.toFixed(this.options.roundTo)).toString()
+		this.values = hasStops
+			? ([...value] as Stop[]).sort((a, b) => a[0] - b[0])
+			: value
+		for (const val of this.values) {
+			const v = hasStops ? (val as Stop)[1] : val as ControlVar<any, TUnit>
+			v.addDep(this)
 		}
-		return num
+
+		if (this.ready) { this.notify() }
 	}
-	protected override _onChange(): void {
-		if (!this._ready) return
-		const res: Record<string, string> = {}
+	protected notify(): void {
+		this.recompute()
+		this._notify()
+	}
+	protected recompute(): void {
+		const valRes: Record<string, any>[] = []
+		const interpolatedRes: Record<string, string> = {}
+		const steps = this.options.steps
+		const totalSteps = getTotalSteps(steps)
+		const { values, name } = this
+		const hasStops = Array.isArray(values[0])
+		const lastStopIndex = values.length - 1
+		const nonStopStepPercent = lastStopIndex === 0 ? 0 : 1 / lastStopIndex // avoid division by 0
+		const state = {}
 
-		const start = this.getLimit(this.options.start)
-		const end = this.getLimit(this.options.end)
-		for (let i = 0; i < this.options.steps + 1; i++) {
-			const val: Record<string, any> = {}
-			for (const key of keys(start)) {
-				if (this.options.only && !this.options.only.includes(key as any)) {
-					val[key as string] = start[key as keyof T]
-					continue
+		let stopIndex = -1
+		let nextStopIndex = -1
+		let startPercent = -1
+		let endPercent = -1
+		for (let i = 0; i < totalSteps; i++) {
+			let percent = Array.isArray(steps)
+				? steps[i]
+				: (i) / (steps - 1)
+
+			let startVal: ControlVar<any, TUnit>, endVal: ControlVar<any, TUnit>
+
+			if (hasStops) {
+				while (
+					(stopIndex < 0 ||
+					endPercent < percent) &&
+					stopIndex < values.length - 1
+				) {
+					stopIndex++
+					startPercent = (values[stopIndex] as any[])[0]
+					nextStopIndex = Math.min(stopIndex + 1, lastStopIndex)
+					endPercent = (values[nextStopIndex] as StopEntry<TUnit>)[0]
 				}
 
-				const percent = i / this.options.steps
-				const startValue = start[key as keyof T]
-				const endValue = end[key as keyof T]
-
-				if (!this.options.interpolate && (typeof startValue !== "number" || typeof endValue !== "number")) {
-					throw new Error(`Cannot interpolate key ${key as string}, it's limits are of type (start: ${startValue} is a ${typeof startValue}, end: ${endValue} is a ${typeof endValue}), please define a custom interpolation function or only interpolate number like properties.`)
-				}
-				const interpolated = (this.options.interpolate ?? lerp)({ totalSteps: this.options.steps, key: key as keyof T, step: i, percent, start, end, startValue, endValue })
-
-				val[key as any] = this._roundIfNeeded(interpolated)
+				startVal = (values[stopIndex] as StopEntry<TUnit>)[1]
+				endVal = (values[nextStopIndex] as StopEntry<TUnit>)[1]
+				percent = getStepPercent(percent, startPercent, endPercent)
+			} else {
+				const startValIndex = Math.floor(percent * (lastStopIndex))
+				const endValIndex = Math.min(startValIndex + 1, lastStopIndex)
+				startPercent = startValIndex * nonStopStepPercent
+				endPercent = endValIndex * nonStopStepPercent
+				percent = getStepPercent(percent, startPercent, endPercent)
+				startVal = values[startValIndex] as ControlVar<any, TUnit>
+				endVal = values[endValIndex] as ControlVar<any, TUnit>
 			}
-			const formatObject = getFormatObject(val, this._stringify, this.type)
 
-			res[`${this.name}${this.separator}${this.options.numbering?.(i) ?? i}`] = this.options.format(formatObject as any)
+			const keyName = this.options.keyName({ i, steps, totalSteps, name: this.name, keyLimit: this.options.keyLimit, separator: this.options.separator })
+
+			const val: Record<string, any> = this.options.interpolator({
+				start: startVal,
+				end: endVal,
+				name,
+				percent,
+				state,
+				step: i,
+				keyName,
+				totalSteps,
+				steps,
+				exclude: this.options.exclude,
+				roundTo: this.options.roundTo,
+			})
+			valRes.push(val)
+			interpolatedRes[keyName] = this.unit(val as TUnit)
 		}
-		this.value = res
-	}
-	set(key: "start" | "end", value: InterpolatedVars<TType, TKeys>["options"]["start"]): void {
-		this._checkParams(this.name, this.type, { ...this.options, [key]: value })
-		this.removeDependency(this.options[key])
-		this.options[key] = value as any // ???
-		this.addDependency(value)
-		this._onChange()
-		this.notify("change", this.name, "key", this.options[key])
-	}
-	get(i: string): string {
-		return this.value[`${this.name}${this.separator}${i}`]
+		this.value = valRes
+		this.interpolated = interpolatedRes
 	}
 }

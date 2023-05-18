@@ -3,5 +3,4 @@
 
 echo "Running pre-push hook"
 
-# TOCONFIGURE
 npm run lint:commits
