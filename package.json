@@ -25,7 +25,7 @@
 		"lint:types": "tsc --noEmit --pretty",
 		"lint:commits": "commitlint --from $(git rev-list HEAD --not --remotes | tail -1)^ --to HEAD --verbose",
 		"lint:imports": "madge --circular --extensions ts ./src",
-		"lint": "npm run lint:types && npm run lint:eslint && npm lint:imports",
+		"lint": "npm run lint:types && npm run lint:eslint && npm run lint:imports",
 		"coverage": "vitest --coverage",
 		"coverage:dev": "vitest --watch --coverage",
 		"test": "npm run lint:types && vitest run",
