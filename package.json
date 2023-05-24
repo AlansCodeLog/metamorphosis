@@ -12,7 +12,9 @@
 		"./*": {
 			"types": "./dist/*.d.ts",
 			"import": "./dist/*.js"
-		}
+		},
+		"./BaseTheme": "./dist/BaseTheme.js",
+		"./tailwind": "./dist/tailwind.js"
 	},
 	"scripts": {
 		"debug": "ts-node -r tsconfig-paths/register -T --esm",
@@ -99,6 +101,7 @@
 	"commitlint": { "extends": [ "@alanscodelog" ] },
 	"engines": { "node": ">=18" },
 	"@comments": {
+		"exports": "Tailwind won't work unless a require is added or I direct the subpath directly to the file. ???",
 		"peerDependencies": "colorsjs.io is only needed if using the base theme",
 		"scripts": {
 			"test": "Runs `lint:types` before (so that flags can be passed to the test command) so that we can test type assertions. See expect_type function in @alanscodelog/utils.",
