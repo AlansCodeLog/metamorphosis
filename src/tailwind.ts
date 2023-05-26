@@ -62,7 +62,7 @@ const splitName = (str: string, sep: string): string[] => {
  * import { escapeKey, createTailwindPlugin } from "metamorphosis/tailwind"
  * createTailwindPlugin(baseTheme, {
  * 	convertValueMap: {
- * 		color: (_entry, key) => `rgb(var(--${escapeKey(key)}) / <alpha-value>)`,
+ * 		color: (key, _entry, _val) => `rgb(var(--${escapeKey(key)}) / <alpha-value>)`,
  * 	}
  *  })
  * ```
@@ -98,7 +98,7 @@ export const createTailwindPlugin = (
 		defaultsMap?: Record<string, string>
 		topLevel?: string[]
 		twTypeMap?: Record<string, string>
-		convertValueMap?: Record<string, (entry: InterpolatedVars | ControlVar, key: string) => string>
+		convertValueMap?: Record<string, (key: string, value: string, entry: InterpolatedVars | ControlVar) => string>
 		separator?: string
 		excludeCss?: string[]
 		excludeTw?: string[]
@@ -123,23 +123,24 @@ export const createTailwindPlugin = (
 				extendedConfig[twType] ??= {} as Record<string, string>
 				const twEntry: any = extendedConfig[twType]
 				if (isTopLevel) {
-					twEntry[twKey] = convertValueMap[type]?.(entry, key) ?? defaultConvert(key)
+					twEntry[twKey] = convertValueMap[type]?.(key, entry.interpolated[key], entry) ?? defaultConvert(key)
 				}
 				if (twName) {
 					twEntry[twName] ??= {}
-					twEntry[twName][twKey] = convertValueMap[type]?.(entry, key) ?? defaultConvert(key)
+					twEntry[twName][twKey] = convertValueMap[type]?.(key, entry.interpolated[key], entry) ?? defaultConvert(key)
 				}
 			}
 			if (defaultsMap[entry.name]) {
 				const twKey = defaultsMap[entry.name]
 				extendedConfig[twType] ??= {} as Record<string, string> // just in case
 				const twEntry: any = extendedConfig[twType]
+				const key = entry.name + entry.options.separator + twKey
 				if (isTopLevel) {
-					twEntry[""] = convertValueMap[type]?.(entry, entry.name + entry.options.separator + twKey) ?? defaultConvert(twKey)
+					twEntry[""] = convertValueMap[type]?.(key, entry.interpolated[key], entry) ?? defaultConvert(twKey)
 				}
 				if (twName) {
 					twEntry[twName] ??= {}
-					twEntry[twName].DEFAULT = convertValueMap[type]?.(entry, entry.name + entry.options.separator + twKey) ?? defaultConvert(twKey)
+					twEntry[twName].DEFAULT = convertValueMap[type]?.(key, entry.interpolated[key], entry) ?? defaultConvert(twKey)
 				}
 			}
 		} else if (entry instanceof ControlVar) {
@@ -149,7 +150,7 @@ export const createTailwindPlugin = (
 			extendedConfig[twType] ??= {} as Record<string, string>
 			const twEntry: any = extendedConfig[twType]
 			if (twName === undefined) throw new Error(`theme key ${themeKeyName} must be named like {tailwindType}-{name}`)
-			twEntry[twName] = convertValueMap[type]?.(entry, twName) ?? entry.css
+			twEntry[twName] = convertValueMap[type]?.(twName, entry.css, entry) ?? entry.css
 		}
 	}
 	const pluginFunc = ({ addBase }: PluginAPI): void => {

@@ -23,7 +23,7 @@ describe.skip(testName(), () => {
 				topLevel: ["color-neutral"],
 				twTypeMap: { color: "colors" },
 				convertValueMap: {
-					color: (_entry, key) => `rgb(var(--${key}) / <alpha-value>)`,
+					color: key => `rgb(var(--${key}) / <alpha-value>)`,
 				},
 				defaultsMap: {
 					"color-": "50",
