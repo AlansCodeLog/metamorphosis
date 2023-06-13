@@ -81,9 +81,15 @@ export const accent = createTailwindColor("color-accent", [
 	...Object.values(colors.blue),
 ])
 
+export const background = new ControlVar(Units.str, "99% 99% 99%")
+
+export const foreground = new ControlVar(Units.str, "1% 1% 1%")
+
 export const baseTheme = new Theme({
 	spacing,
 	bg,
+	"color-bg": background,
+	"color-fg": foreground,
 	ok,
 	warning,
 	danger,

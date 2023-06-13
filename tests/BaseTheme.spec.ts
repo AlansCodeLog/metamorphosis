@@ -7,11 +7,11 @@ import { Units } from "../src/index.js"
 import { createTailwindPlugin } from "../src/tailwind.js"
 
 
-describe.skip(testName(), () => {
-	it("base theme", () => {
+describe(testName(), () => {
+	it.skip("base theme", () => {
 		// ignore, just to manually inspect the theme
-		// console.log("css", baseTheme.css)
-		expect(true).to.equal(true)
+		console.log("css", baseTheme.css)
+		expect(true).to.equal(false)
 	})
 	it("tailwindPlugin", () => {
 		// ignore, just to manually inspect the theme
@@ -31,16 +31,14 @@ describe.skip(testName(), () => {
 						keys(baseTheme.value)
 							.filter(key => {
 								const entry = baseTheme.value[key]
-								if (!entry.name) return false
-								return entry.name.startsWith("color-") &&
-								entry.name !== "color-neutral"
-							}
-							)
-							.map(key => [baseTheme.value[key].name, "500"])),
+								if (!("name" in entry)) return false
+								return entry.name.startsWith("color-")
+							})
+							.map(key => [(baseTheme.value[key] as any).name, "500"])),
 				},
 			})
 		}).to.not.throw()
-		console.log("plugin", pretty(plugin!))
+		// console.log("plugin", pretty(plugin!))
 	})
 	it("can exclude variables from config", () => {
 		// ignore, just to manually inspect the theme
@@ -51,8 +49,8 @@ describe.skip(testName(), () => {
 			},
 			excludeTw: ["color-neutral"],
 		})
-		expect((plugin.config!.theme!.colors as any)["50"]).to.equal(undefined)
-		expect((plugin.config!.theme!.colors as any).warning).to.toBeDefined()
+		expect((plugin.config!.theme!.extend!.colors as any)["50"]).to.equal(undefined)
+		expect((plugin.config!.theme!.extend!.colors as any).warning).to.toBeDefined()
 	})
 	it("tailwindPlugin3", () => {
 		// ignore, just to manually inspect the theme

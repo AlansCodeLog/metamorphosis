@@ -150,7 +150,7 @@ export const createTailwindPlugin = (
 			extendedConfig[twType] ??= {} as Record<string, string>
 			const twEntry: any = extendedConfig[twType]
 			if (twName === undefined) throw new Error(`theme key ${themeKeyName} must be named like {tailwindType}-{name}`)
-			twEntry[twName] = convertValueMap[type]?.(twName, entry.css, entry) ?? entry.css
+			twEntry[twName] = convertValueMap[type]?.(themeKeyName, entry.css, entry) ?? entry.css
 		}
 	}
 	const pluginFunc = ({ addBase }: PluginAPI): void => {
