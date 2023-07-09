@@ -1,6 +1,6 @@
 import { castType, keys } from "@alanscodelog/utils"
 import plugin from "tailwindcss/plugin.js"
-import { type PluginAPI } from "tailwindcss/types/config.js"
+import type { PluginAPI } from "tailwindcss/types/config"
 
 import { ControlVar } from "./ControlVar.js"
 import { InterpolatedVars } from "./InterpolatedVars.js"
