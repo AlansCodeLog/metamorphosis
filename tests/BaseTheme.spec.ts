@@ -1,4 +1,5 @@
-import { keys, pretty, testName } from "@alanscodelog/utils"
+import { keys } from "@alanscodelog/utils"
+import { testName } from "@alanscodelog/utils/testing"
 import { describe, expect, it } from "vitest"
 
 import { baseTheme } from "../src/BaseTheme.js"

@@ -62,11 +62,17 @@ export class InterpolatedVars<
 	TUnit extends Record<string, any> = Record<string, any>,
 > extends Base {
 	name: string
+
 	unit: (value: TUnit) => string
+
 	values!: Value<TUnit>
+
 	ready: boolean = false
+
 	value: Record<string, any>[] = []
+
 	interpolated: Record<string, string> = {}
+
 	options: InterpolatedVarsOptions<ControlVar<any, TUnit>> = {
 		roundTo: 3,
 		exclude: [],
@@ -76,6 +82,7 @@ export class InterpolatedVars<
 		separator: "-",
 		steps: 10,
 	}
+
 	constructor(
 		name: string,
 		unit: (value: TUnit) => string,
@@ -92,10 +99,12 @@ export class InterpolatedVars<
 		this.ready = true
 		this.notify()
 	}
+
 	setOpts(value: Partial<InterpolatedVarsOptions<ControlVar<any, TUnit>>>): void {
 		this.options = { ...this.options, ...value }
 		if (this.ready) { this.notify() }
 	}
+
 	set(value: Value<TUnit>): void {
 		// :/ https://github.com/microsoft/TypeScript/issues/50652
 		type Stop = StopEntry<TUnit>
@@ -121,10 +130,12 @@ export class InterpolatedVars<
 
 		if (this.ready) { this.notify() }
 	}
+
 	protected notify(): void {
 		this.recompute()
 		this._notify()
 	}
+
 	protected recompute(): void {
 		const valRes: Record<string, any>[] = []
 		const interpolatedRes: Record<string, string> = {}

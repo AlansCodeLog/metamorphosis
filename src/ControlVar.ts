@@ -31,7 +31,9 @@ export class ControlVar<
 		TVal extends Record<string, any> ? TVal : Record<"_", MakePrimitive<TVal>>,
 > extends Base {
 	unit: (value: TUnit) => string
+
 	value!: TUnit
+
 	css: string = ""
 
 	constructor(
@@ -43,14 +45,17 @@ export class ControlVar<
 		this.unit = unit
 		this.set(value as any)
 	}
+
 	set(value: MakePrimitive<TVal> | TUnit): void {
 		this.value = (["number", "string", "boolean"].includes(typeof value) ? { _: value } : value) as TUnit
 		this.notify()
 	}
+
 	protected notify(): void {
 		this.recompute()
 		this._notify()
 	}
+
 	protected recompute(): void {
 		this.css = this.unit(this.value)
 	}

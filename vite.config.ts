@@ -1,30 +1,36 @@
 import { run } from "@alanscodelog/utils/node"
 import glob from "fast-glob"
-import { builtinModules } from "module"
 import path from "path"
 import type { PluginOption } from "vite"
+import dts from "vite-plugin-dts"
+import { externalizeDeps } from "vite-plugin-externalize-deps"
 import tsconfigPaths from "vite-tsconfig-paths"
 import { defineConfig } from "vitest/config"
 
-import packageJson from "./package.json"
 
-
-const typesPlugin = (): PluginOption => ({
+const typesPlugin = ({ fixOnly }: { fixOnly: boolean }): PluginOption => ({
 	name: "typesPlugin",
 	// eslint-disable-next-line no-console
-	writeBundle: async () => run("npm run build:types").promise.catch(e => console.log(e)).then(() => undefined),
+	writeBundle: async () => run(`npm run build:types${fixOnly ? ":fix" : ""}`).promise.catch(e => console.log(e)).then(() => undefined),
 })
 
 // https://vitejs.dev/config/
 export default async ({ mode }: { mode: string }) => defineConfig({
 	plugins: [
+		// it isn't enough to just pass the deps list to rollup.external since it will not exclude subpath exports
+		externalizeDeps(),
 		// even if we don't use aliases, this is needed to get imports based on baseUrl working
 		tsconfigPaths(),
-		typesPlugin(),
+		// generates types for ts/vue files
+		// if only using ts, can be removed and build:types script used instead
+		dts({
+			entryRoot: "src",
+			tsconfigPath: "./tsconfig.types.json",
+		}),
+		// fixes alias and baseUrl imports in the generated types
+		// cannot be removed because dts is not compatible with tsconfigPaths
+		typesPlugin({ fixOnly: true }),
 	],
-	esbuild: {
-		legalComments: "none",
-	},
 	build: {
 		outDir: "dist",
 		lib: {
@@ -32,16 +38,14 @@ export default async ({ mode }: { mode: string }) => defineConfig({
 			formats: ["es"],
 		},
 		rollupOptions: {
-			external: [...builtinModules, ...Object.keys((packageJson as any).dependencies ?? {}), ...Object.keys((packageJson as any).peerDependencies ?? {}), /@babel\/runtime/, /tailwindcss/],
 			output: {
 				preserveModulesRoot: "src",
 				preserveModules: true,
 			},
 		},
+		minify: false, // this is a library
 		...(mode === "production" ? {
-			minify: false,
 		} : {
-			minify: false,
 			sourcemap: "inline",
 		}),
 	},
@@ -58,6 +62,8 @@ export default async ({ mode }: { mode: string }) => defineConfig({
 	},
 	server: {
 		watch: {
+			// for pnpm
+			followSymlinks: true,
 			// watch changes in linked repos
 			ignored: ["!**/node_modules/@alanscodelog/**"],
 		},

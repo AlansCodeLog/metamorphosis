@@ -1,4 +1,4 @@
-import { testName } from "@alanscodelog/utils"
+import { testName } from "@alanscodelog/utils/testing"
 import { describe, expect, it } from "vitest"
 
 import { ControlVar } from "../src/ControlVar.js"

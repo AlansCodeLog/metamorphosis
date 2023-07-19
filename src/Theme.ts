@@ -11,14 +11,20 @@ import { escapeKey } from "./utils.js"
  */
 export class Theme<TValues extends Record<string, InterpolatedVars<any> | ControlVar<any, any>> = Record<string, InterpolatedVars<any> | ControlVar<any, any>>> extends Base {
 	protected ready: boolean = false
+
 	els: HTMLElement[] = []
+
 	css: Record<string, string> = {}
+
 	value: TValues = {} as any
+
 	options: { escapeChar: string } = {
 		/** For replacing invalid css variable key characters. */
 		escapeChar: "-",
 	}
+
 	protected _listeners: Record<string, (() => void) []> = { change: []}
+
 	constructor(value: TValues, opts: Partial<Theme<TValues>["options"]> = {}) {
 		super()
 		this.add(value)
@@ -26,16 +32,19 @@ export class Theme<TValues extends Record<string, InterpolatedVars<any> | Contro
 		this.recompute(false)
 		this.ready = true
 	}
+
 	setOpts(value: Partial<Theme<TValues>["options"]> = {}): void {
 		this.options = { ...this.options, ...value }
 		if (!this.ready) return
 		this.notify()
 	}
+
 	add(value: Record<string, ControlVar<any, any> | InterpolatedVars<any> >): void {
 		for (const key of keys(value)) {
 			this._add(key, value[key])
 		}
 	}
+
 	protected _add(key: string, value: InterpolatedVars<any> | ControlVar<any, any>): void {
 		if (this.value[key]) throw new Error(`Key ${key} already exists in theme. Use set to change the value.`)
 		if (this.ready) { this.value[key]?.removeDep(this) }
@@ -46,6 +55,7 @@ export class Theme<TValues extends Record<string, InterpolatedVars<any> | Contro
 
 		if (this.ready) { this.notify() }
 	}
+
 	remove(key: string): void {
 		if (!this.value[key]) return
 		if (this.ready) { this.value[key]?.removeDep(this) }
@@ -57,6 +67,7 @@ export class Theme<TValues extends Record<string, InterpolatedVars<any> | Contro
 		// NOTE the use of _, we don't need to recompute other keys
 		if (this.ready) { this.notify() }
 	}
+
 	set(key: string, value: InterpolatedVars<any> | ControlVar<any, any>): void {
 		if (this.ready) { this.value[key]?.removeDep(this) }
 
@@ -66,6 +77,7 @@ export class Theme<TValues extends Record<string, InterpolatedVars<any> | Contro
 
 		if (this.ready) { this.notify({ recompute: false }) }
 	}
+
 	protected notify({ recompute = true }: { recompute?: boolean } = {}): void {
 		if (!this.ready) return
 		if (recompute) this.recompute(false)
@@ -77,15 +89,18 @@ export class Theme<TValues extends Record<string, InterpolatedVars<any> | Contro
 			this._lastPropertiesSet = Theme.setElVariables(el, this.css, this._lastPropertiesSet)
 		}
 	}
+
 	on(type: "change", cb: () => void): void {
 		this._listeners[type].push(cb)
 	}
+
 	off(type: "change", cb: () => void): void {
 		const i = this._listeners[type].findIndex(cb)
 		if (i > -1) {
 			this._listeners[type].splice(i, 1)
 		}
 	}
+
 	protected _generateCss(
 		res: Record<string, string>,
 		key: string,
@@ -127,7 +142,9 @@ export class Theme<TValues extends Record<string, InterpolatedVars<any> | Contro
 		}
 		this.css = res
 	}
+
 	protected _lastPropertiesSet: string[] = []
+
 	// todo move to utils?
 	/**
 	 * Set css variables on an element.
@@ -147,6 +164,7 @@ export class Theme<TValues extends Record<string, InterpolatedVars<any> | Contro
 		}
 		return newLastPropertiesSet
 	}
+
 	/**
 	 * Attach to an element and automatically set and update the theme's properties on it.
 	 *
@@ -156,6 +174,7 @@ export class Theme<TValues extends Record<string, InterpolatedVars<any> | Contro
 		this.els.push(el)
 		this._lastPropertiesSet = Theme.setElVariables(el, this.css, this._lastPropertiesSet)
 	}
+
 	detach(el: HTMLElement = document.documentElement): void {
 		const existing = this.els.indexOf(el)
 		if (existing >= 0) {
@@ -168,6 +187,7 @@ export class Theme<TValues extends Record<string, InterpolatedVars<any> | Contro
 			console.warn("Was not attached to element:", el)
 		}
 	}
+
 	/**
 	 * Write theme variables to get autocomplete while developing. Only works from node.
 	 *

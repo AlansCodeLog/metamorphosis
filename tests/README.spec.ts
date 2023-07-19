@@ -1,4 +1,4 @@
-import { testName } from "@alanscodelog/utils"
+import { testName } from "@alanscodelog/utils/testing"
 import Color from "colorjs.io"
 import { describe, it } from "vitest"
 

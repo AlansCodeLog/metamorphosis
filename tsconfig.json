@@ -8,11 +8,12 @@
 		"target": "ESNext",
 		"outDir": "dist",
 		// "baseUrl": "src",
-		"lib": [  "dom",  "esnext" ],
-		"noErrorTruncation":true,
-		"importsNotUsedAsValues": "remove", // todo - workaround for https://github.com/microsoft/TypeScript/issues/53302 - must remove from main config package
+		"lib": [
+			"dom",
+			"esnext"
+		],
+		"noErrorTruncation": true,
 		"verbatimModuleSyntax": true,
-
 		"moduleResolution": "bundler"
 	},
 	"include": [
