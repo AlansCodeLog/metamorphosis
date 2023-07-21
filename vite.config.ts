@@ -2,16 +2,15 @@ import { run } from "@alanscodelog/utils/node"
 import glob from "fast-glob"
 import path from "path"
 import type { PluginOption } from "vite"
-import dts from "vite-plugin-dts"
 import { externalizeDeps } from "vite-plugin-externalize-deps"
 import tsconfigPaths from "vite-tsconfig-paths"
 import { defineConfig } from "vitest/config"
 
 
-const typesPlugin = ({ fixOnly }: { fixOnly: boolean }): PluginOption => ({
+const typesPlugin = (): PluginOption => ({
 	name: "typesPlugin",
 	// eslint-disable-next-line no-console
-	writeBundle: async () => run(`npm run build:types${fixOnly ? ":fix" : ""}`).promise.catch(e => console.log(e)).then(() => undefined),
+	writeBundle: async () => run(`npm run build:types`).promise.catch(e => console.log(e)).then(() => undefined),
 })
 
 // https://vitejs.dev/config/
@@ -21,15 +20,8 @@ export default async ({ mode }: { mode: string }) => defineConfig({
 		externalizeDeps(),
 		// even if we don't use aliases, this is needed to get imports based on baseUrl working
 		tsconfigPaths(),
-		// generates types for ts/vue files
-		// if only using ts, can be removed and build:types script used instead
-		dts({
-			entryRoot: "src",
-			tsconfigPath: "./tsconfig.types.json",
-		}),
-		// fixes alias and baseUrl imports in the generated types
-		// cannot be removed because dts is not compatible with tsconfigPaths
-		typesPlugin({ fixOnly: true }),
+		// runs build:types script which takes care of generating types and fixing type aliases and baseUrl imports
+		typesPlugin(),
 	],
 	build: {
 		outDir: "dist",
