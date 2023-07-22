@@ -10,7 +10,7 @@ import { defineConfig } from "vitest/config"
 const typesPlugin = (): PluginOption => ({
 	name: "typesPlugin",
 	// eslint-disable-next-line no-console
-	writeBundle: async () => run(`npm run build:types`).promise.catch(e => console.log(e)).then(() => undefined),
+	writeBundle: async () => run(`npm run build:types`).promise.catch(e => { console.log(e.stdout); process.exit(1) }).then(() => undefined),
 })
 
 // https://vitejs.dev/config/
