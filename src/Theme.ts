@@ -1,4 +1,4 @@
-import { keys } from "@alanscodelog/utils/retypes"
+import { keys } from "@alanscodelog/utils/keys.js"
 
 import { Base } from "./Base.js"
 import type { ControlVar } from "./ControlVar.js"

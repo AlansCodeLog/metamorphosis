@@ -1,5 +1,5 @@
-import { keys } from "@alanscodelog/utils/retypes"
-import { castType } from "@alanscodelog/utils/utils"
+import { castType } from "@alanscodelog/utils/castType.js"
+import { keys } from "@alanscodelog/utils/keys.js"
 import plugin from "tailwindcss/plugin.js"
 import type { PluginAPI } from "tailwindcss/types/config.js"
 

@@ -1,4 +1,4 @@
-import { keys } from "@alanscodelog/utils/retypes"
+import { keys } from "@alanscodelog/utils/keys.js"
 
 import type { ControlVar } from "./ControlVar.js"
 import type { InterpolatedVarsOptions, InterpolatorOptions, KeyNamer } from "./types.js"
