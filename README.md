@@ -1,8 +1,9 @@
 ### 🚧 WORK IN PROGRESS 🚧
+[![Docs](https://github.com/alanscodelog/metamorphosis/workflows/Docs/badge.svg)](https://github.com/alanscodelog/metamorphosis/actions/workflows/docs.yml)
+[![Build](https://github.com/alanscodelog/metamorphosis/actions/workflows/build.yml/badge.svg)](https://github.com/alanscodelog/metamorphosis/actions/workflows/build.yml)
+[![Release](https://github.com/alanscodelog/metamorphosis/actions/workflows/release.yml/badge.svg)](https://github.com/alanscodelog/metamorphosis/actions/workflows/release.yml)
+[NPM Version (with latest tag)](https://img.shields.io/npm/v/metamorphosis/latest)](https://www.npmjs.com/package/metamorphosis/v/latest)
 
-![Docs](https://github.com/alanscodelog/metamorphosis/workflows/Docs/badge.svg)
-![Build](https://github.com/alanscodelog/metamorphosis/workflows/Build/badge.svg)
-[![Release](https://github.com/alanscodelog/metamorphosis/workflows/Release/badge.svg)](https://www.npmjs.com/package/metamorphosis)
 
 # [Docs](https://alanscodelog.github.io/metamorphosis)
 

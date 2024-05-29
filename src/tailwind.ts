@@ -1,6 +1,7 @@
-import { castType, keys } from "@alanscodelog/utils"
+import { keys } from "@alanscodelog/utils/retypes"
+import { castType } from "@alanscodelog/utils/utils"
 import plugin from "tailwindcss/plugin.js"
-import type { PluginAPI } from "tailwindcss/types/config"
+import type { PluginAPI } from "tailwindcss/types/config.js"
 
 import { ControlVar } from "./ControlVar.js"
 import { InterpolatedVars } from "./InterpolatedVars.js"
@@ -83,7 +84,7 @@ const splitName = (str: string, sep: string): string[] => {
  * ```
  *
  */
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+ 
 export const createTailwindPlugin = (
 	themeInstance: Theme<any>,
 	{
@@ -103,6 +104,7 @@ export const createTailwindPlugin = (
 		excludeCss?: string[]
 		excludeTw?: string[]
 	} = {}
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ) => {
 	const extendedConfig: Record<string, string | Record<string, string>> = {}
 
