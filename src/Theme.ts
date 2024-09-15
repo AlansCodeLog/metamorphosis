@@ -47,7 +47,7 @@ export class Theme<TValues extends Record<string, InterpolatedVars<any> | Contro
 
 	protected _add(key: string, value: InterpolatedVars<any> | ControlVar<any, any>): void {
 		if (this.value[key]) throw new Error(`Key ${key} already exists in theme. Use set to change the value.`)
-		if (this.ready) { this.value[key]?.removeDep(this) }
+		if (this.ready) { this.value[key as keyof TValues]?.removeDep(this) }
 
 		this.value[key as keyof TValues] = value as TValues[keyof TValues]
 
