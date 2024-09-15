@@ -12,10 +12,8 @@
 		},
 		"./*": {
 			"types": "./dist/*.d.ts",
-			"import": "./dist/*.js"
-		},
-		"./BaseTheme": "./dist/BaseTheme.js",
-		"./tailwind": "./dist/tailwind.js"
+			"import": "./dist/*"
+		}
 	},
 	"scripts": {
 		"debug": "ts-node -r tsconfig-paths/register -T --esm",
