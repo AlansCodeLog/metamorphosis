@@ -20,16 +20,15 @@
 		"build": "vite build",
 		"build:dev": "vite build --mode development",
 		"build:watch": "vite build --watch --mode production",
-		"build:types": "tsc -p tsconfig.types.json",
 		"lint:eslint": "eslint \"{src,tests,bin}/**/*.{cjs,js,ts}\" \"*.{cjs,js,ts}\" --max-warnings=0 --report-unused-disable-directives",
 		"lint:types": "tsc --noEmit --pretty",
 		"lint:commits": "commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose",
 		"lint:imports": "madge --circular --extensions ts ./src",
-		"lint": "npm run lint:types && npm run lint:eslint",
-		"coverage": "vitest --exclude '.direnv/**/*' --coverage",
-		"coverage:dev": "vitest --exclude '.direnv/**/*'  --watch --coverage",
-		"test": "npm run lint:types && vitest run --exclude '.direnv/**/*'",
-		"test:watch": "vitest --watch --exclude '.direnv/**/*'",
+		"lint": "npm run lint:eslint",
+		"coverage": "vitest --coverage",
+		"coverage:dev": "vitest --watch --coverage",
+		"test": "vitest run",
+		"test:watch": "vitest --watch",
 		"doc": "typedoc --options typedoc.config.cjs",
 		"doc:watch": "onchange -i \"src/**/*.ts\" \"typedoc.config.cjs\" -- npm run doc",
 		"doc:serve": "http-server docs --port=5001",
@@ -59,6 +58,7 @@
 		"@alanscodelog/eslint-config": "^0.0.0",
 		"@alanscodelog/semantic-release-config": "^5.0.1",
 		"@alanscodelog/tsconfigs": "^4.0.1",
+		"@alanscodelog/vite-config": "^0.0.1",
 		"@commitlint/cli": "^19.3.0",
 		"@types/node": "^20.12.12",
 		"@vitest/coverage-c8": "^0.33.0",
@@ -118,6 +118,5 @@
 			"prepare": "Needed so that if we pull the package from git it will get built and installed properly. The HUSKY stuff is a workaround for https://github.com/typicode/husky/issues/1213",
 			"actions:debug": "For debugging github build action locally with nektos/act. Requires act and docker. Note: Cache will never work locally because of https://github.com/nektos/act/issues/285"
 		}
-	},
-	"private": false
+	}
 }
