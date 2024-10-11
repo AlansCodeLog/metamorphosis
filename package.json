@@ -24,19 +24,19 @@
 		"lint:types": "tsc --noEmit --pretty",
 		"lint:commits": "commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose",
 		"lint:imports": "madge --circular --extensions ts ./src",
-		"lint": "npm run lint:eslint",
+		"lint": "pnpm lint:eslint",
 		"coverage": "vitest --coverage",
 		"coverage:dev": "vitest --watch --coverage",
 		"test": "vitest run",
 		"test:watch": "vitest --watch",
 		"doc": "typedoc --options typedoc.config.cjs",
-		"doc:watch": "onchange -i \"src/**/*.ts\" \"typedoc.config.cjs\" -- npm run doc",
+		"doc:watch": "onchange -i \"src/**/*.ts\" \"typedoc.config.cjs\" -- pnpm doc",
 		"doc:serve": "http-server docs --port=5001",
-		"doc:dev": "concurrently \"npm run doc:watch\" \"npm run doc:serve\"",
+		"doc:dev": "concurrently \"pnpm doc:watch\" \"pnpm doc:serve\"",
 		"doc:check-invalid": "typedoc --options typedoc.config.cjs --listInvalidSymbolLinks",
 		"gen:exports": "indexit update --ignore {Units,utils,internal}.ts -o '${path}.js'",
 		"actions:debug": "act -r -v -j build",
-		"prepare": "husky && npm run build"
+		"prepare": "husky && pnpm build"
 	},
 	"dependencies": {
 		"@alanscodelog/utils": "^4.1.0"
