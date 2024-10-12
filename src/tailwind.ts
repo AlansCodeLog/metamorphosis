@@ -60,7 +60,7 @@ const splitName = (str: string, sep: string): string[] => {
  * By default, `var(--${escapeKey(key)})` is used as the value on the tailwind variables. You can change this by using the `convertValueMap` option. **This should always be done for colors, otherwise tailwind's alpha syntax won't work. Aditionally as mentioned before, this requires variables to format to their raw components (e.g. `0, 0 ,0` instead of `rgb(0, 0, 0)`).**
  *
  * ```ts
- * import { escapeKey, createTailwindPlugin } from "metamorphosis/tailwind"
+ * import { escapeKey, createTailwindPlugin } from "metamorphosis/tailwind.js"
  * createTailwindPlugin(baseTheme, {
  * 	convertValueMap: {
  * 		color: (key, _entry, _val) => `rgb(var(--${escapeKey(key)}) / <alpha-value>)`,
