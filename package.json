@@ -18,8 +18,7 @@
 	"scripts": {
 		"debug": "ts-node -r tsconfig-paths/register -T --esm",
 		"build": "vite build",
-		"build:dev": "vite build --mode development",
-		"build:watch": "vite build --watch --mode production",
+		"build:watch": "vite build --watch --mode development ",
 		"lint:eslint": "eslint \"{src,tests,bin}/**/*.{cjs,js,ts}\" \"*.{cjs,js,ts}\" --max-warnings=0 --report-unused-disable-directives",
 		"lint:types": "tsc --noEmit --pretty",
 		"lint:commits": "commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose",
