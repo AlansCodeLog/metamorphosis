@@ -1,7 +1,15 @@
 import { defineConfig } from "@alanscodelog/vite-config"
 
-export default defineConfig({}, {
+const config = defineConfig({}, {
 	test: {
 		environment: "jsdom"
 	},
+}, {
+	build: {
+		// @ts-expect-error
+		lib: {
+			formats: ["es", "cjs"]
+		}
+	}
 })
+export default config 
