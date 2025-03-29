@@ -28,8 +28,8 @@
 
         devShells.default = pkgs.mkShell {
           packages = with pkgs;[
-            nodejs_22
-            nodejs_22.pkgs.pnpm
+            nodejs_23
+            nodejs_23.pkgs.pnpm
           ];
           shellHook = ''
             export NPM_TOKEN=$(cat $SECRETS_DIR/NPM_TOKEN)
