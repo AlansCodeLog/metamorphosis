@@ -1,10 +1,10 @@
 import { keys } from "@alanscodelog/utils/keys.js"
-import { describe, expect, it } from "vitest"
+import { expect, it } from "vitest"
 
 import { baseTheme } from "../src/BaseTheme.js"
 import { ControlVar } from "../src/ControlVar.js"
 import { Units } from "../src/index.js"
-import { createTailwindPlugin } from "../src/tailwind.js"
+import { themeAsTailwindCss } from "../src/tailwind.js"
 
 
 it.skip("base theme", () => {
@@ -12,17 +12,16 @@ it.skip("base theme", () => {
 	console.log("css", baseTheme.css)
 	expect(true).to.equal(false)
 })
-it("tailwindPlugin", () => {
+it("tailwind config", () => {
 	// ignore, just to manually inspect the theme
 	baseTheme.add({ "color-fancy": new ControlVar(Units.px, 0) })
-	let plugin: any
+	let config: any
 
 	expect(() => {
-		plugin = createTailwindPlugin(baseTheme, {
-			topLevel: ["color-neutral"],
+		config = themeAsTailwindCss(baseTheme, {
 			twTypeMap: { color: "colors" },
 			convertValueMap: {
-				color: key => `rgb(var(--${key}) / <alpha-value>)`,
+				color: key => `converted(var(--${key}) / <alpha-value>)`,
 			},
 			defaultsMap: {
 				"color-": "50",
@@ -37,27 +36,25 @@ it("tailwindPlugin", () => {
 			},
 		})
 	}).to.not.throw()
-	// console.log("plugin", pretty(plugin!))
 })
 it("can exclude variables from config", () => {
 	// ignore, just to manually inspect the theme
-	const plugin = createTailwindPlugin(baseTheme, {
+	const config = themeAsTailwindCss(baseTheme, {
 		twTypeMap: { color: "colors" },
 		convertValueMap: {
-			color: (_entry, key) => `rgb(var(--${key}) / <alpha-value>)`,
+			color: (_entry, key) => `converted(var(--${key}) / <alpha-value>)`,
 		},
 		excludeTw: ["color-neutral"],
 	})
-	expect((plugin.config!.theme!.extend!.colors as any)["50"]).to.equal(undefined)
-	expect((plugin.config!.theme!.extend!.colors as any).warning).to.toBeDefined()
+	expect(config.includes("color-neutral")).to.equal(false)
 })
-it("tailwindPlugin3", () => {
+it("tailwind config inspect", () => {
 	// ignore, just to manually inspect the theme
 	baseTheme.add({ fancy: new ControlVar(Units.px, 0) })
-	expect(() => createTailwindPlugin(baseTheme, {
+	expect(() => themeAsTailwindCss(baseTheme, {
 		twTypeMap: { color: "colors" },
 		convertValueMap: {
-			color: (_entry, key) => `rgb(var(--${key}) / <alpha-value>)`,
+			color: (_entry, key) => `converted(var(--${key}) / <alpha-value>)`,
 		},
 	})).to.throw()
 })

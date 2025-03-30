@@ -1,15 +1,12 @@
 import { castType } from "@alanscodelog/utils/castType.js"
 import { keys } from "@alanscodelog/utils/keys.js"
-import plugin from "tailwindcss/plugin.js"
-import type { PluginAPI } from "tailwindcss/types/config.js"
 
 import { ControlVar } from "./ControlVar.js"
 import { InterpolatedVars } from "./InterpolatedVars.js"
 import type { Theme } from "./Theme.js"
 import { escapeKey } from "./utils.js"
 
-
-const removePrefix = (str: string, name: string, sep: string): string => str.replace(`${name}${sep}`, "")
+// const removePrefix = (str: string, name: string, sep: string): string => str.replace(`${name}${sep}`, "")
 
 /** Ensures name is split by the first separator only. */
 const splitName = (str: string, sep: string): string[] => {
@@ -21,14 +18,18 @@ const splitName = (str: string, sep: string): string[] => {
 		return [type, name]
 	}
 }
+const defaultTailwindOpts: Required<TailwindPluginOptions> = {
+	twTypeMap: {},
+	convertValueMap: {},
+	separator: "-",
+	excludeTw: [],
+	defaultsMap: {}
+}
+
 /**
- * Creates a Tailwind CSS plugin that takes a theme and extends the config with it's variables and registers the variables as global css variables.
+ * Creates a static Tailwind V4 CSS config using the given theme. This ensures things look ok (at least with the static defaults) before the js is loaded that sets the final theme variables.
  *
- * The idea is the global css variables contain the values and the tailwind config variables just point to them using `var(--{theme-var-name})`, this way they can easily be dynamically overriden by the library.
- *
- * It expects var values should be formatted to their raw components (e.g. `0, 0 ,0` instead of `rgb(0, 0, 0)`) for maximum compatibility with tailwind. See below.
- *
- * Vars should also have a naming scheme like `{tailwindType}-{name}` (e.g. `colors-red`), or for top level variables `{tailwindType}` (e.g. `spacing`).
+ * Vars should have a naming scheme like `{tailwindType}-{name}` (e.g. `colors-red`), or for top level variables `{tailwindType}` (e.g. `spacing`).
  *
  * For InterpolatedVars, `{name}` would be the instance's name. To name ControlVars, they should be added to the theme like so:
  *
@@ -38,38 +39,25 @@ const splitName = (str: string, sep: string): string[] => {
  *
  * Since it's a bit weird to have variables named `--colors-red-000`, there is a `twTypeMap` option that allows you to map an extracted type to a tailwind config key. For example, you can pass `{color:"colors"}` to be able to call variables `color-*`.
  *
+ * By default the following function is used as the value on the tailwind variables:
  *
- * To force a variable to be registered at the "top" level, use the topLevel option:
- * ```ts
- *
- * createTailwindPlugin(baseTheme, {
- *		topLevel: ["color-neutral"],
- *		twTypeMap: { color: "colors" },
- * })
- * // will extend the config with:
- * {
- * 	colors: {
- * 		// nameless keys of color-neutral
- * 		"50": "var(--color-neutral-50)",
- * 		"100" : "var(--color-neutral-100)",
- * 		...
- * 	}
- * }
+ * ```
+ * (key, value, _entry): string => `--${escapeKey(key, "-")}: ${value};`
  * ```
  *
- * By default, `var(--${escapeKey(key)})` is used as the value on the tailwind variables. You can change this by using the `convertValueMap` option. **This should always be done for colors, otherwise tailwind's alpha syntax won't work. Aditionally as mentioned before, this requires variables to format to their raw components (e.g. `0, 0 ,0` instead of `rgb(0, 0, 0)`).**
+ * You can change this per type by using the `convertValueMap` option.
  *
  * ```ts
  * import { escapeKey, createTailwindPlugin } from "metamorphosis/tailwind.js"
  * createTailwindPlugin(baseTheme, {
  * 	convertValueMap: {
- * 		color: (key, _entry, _val) => `rgb(var(--${escapeKey(key)}) / <alpha-value>)`,
+ * 		color: (key, value, entry) => `...`,
  * 	}
  *  })
  * ```
  *
  *
- * You can also exclude variables from the css or from the tailwind config by using `excludeCss` and `excludeTw`.
+ * You can also exclude variables from the tailwind config by setting `excludeTw`.
  *
  * Default versions of interpolated variables can be specified with the defaultsMap:
  *
@@ -82,90 +70,69 @@ const splitName = (str: string, sep: string): string[] => {
  * 	},
  * })
  * ```
- *
  */
  
-export const createTailwindPlugin = (
+export function themeAsTailwindCss(
 	themeInstance: Theme<any>,
-	{
-		topLevel = [],
-		twTypeMap = {},
-		convertValueMap = {},
-		separator = "-",
-		excludeCss = [],
-		excludeTw = [],
-		defaultsMap = {},
-	}: {
-		defaultsMap?: Record<string, string>
-		topLevel?: string[]
-		twTypeMap?: Record<string, string>
-		convertValueMap?: Record<string, (key: string, value: string, entry: InterpolatedVars | ControlVar) => string>
-		separator?: string
-		excludeCss?: string[]
-		excludeTw?: string[]
-	} = {}
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-) => {
-	const extendedConfig: Record<string, string | Record<string, string>> = {}
+	options: TailwindPluginOptions = {}
+): string {
+	const opts = {
+		...defaultTailwindOpts,
+		...options
+	}
+	const {
+		twTypeMap,
+		convertValueMap,
+		separator,
+		excludeTw,
+		defaultsMap,
+	} = opts
 
-	const defaultConvert = (key: string): string => `var(--${escapeKey(key, separator)})`
+	const defaultConvert = (key: string, value: string, _entry: InterpolatedVars | ControlVar): string => `--${escapeKey(key, separator)}: ${value};`
+
+	const text: string[] = []
+	text.push(`@theme {`)
+
+	const config: Record<string, string | Record<string, string>> = {}
 
 	for (const [themeKeyName, entry] of Object.entries(themeInstance.value)) {
 		castType<Theme["value"][keyof Theme["value"]]>(entry)
-		// const entry = themeInstance.value[key]
-		// console.log(entry)
 		if (entry instanceof InterpolatedVars) {
 			if (excludeTw.includes(entry.name)) continue
-			const [type, twName] = splitName(entry.name, separator)
+			const [type] = splitName(entry.name, separator)
 			const twType = twTypeMap[type] ?? type
-			const isTopLevel = !twName || topLevel.includes(entry.name)
 
 			for (const key of keys(entry.interpolated)) {
-				const twKey = removePrefix(key, entry.name, entry.options.separator)
-				extendedConfig[twType] ??= {} as Record<string, string>
-				const twEntry: any = extendedConfig[twType]
-				if (isTopLevel) {
-					twEntry[twKey] = convertValueMap[type]?.(key, entry.interpolated[key], entry) ?? defaultConvert(key)
-				}
-				if (twName) {
-					twEntry[twName] ??= {}
-					twEntry[twName][twKey] = convertValueMap[type]?.(key, entry.interpolated[key], entry) ?? defaultConvert(key)
-				}
+				config[twType] ??= {} as Record<string, string>
+				const v = convertValueMap[type]?.(key, entry.interpolated[key], entry) ?? defaultConvert(key, entry.interpolated[key], entry)
+				text.push(`\t${v}`)
 			}
 			if (defaultsMap[entry.name]) {
 				const twKey = defaultsMap[entry.name]
-				extendedConfig[twType] ??= {} as Record<string, string> // just in case
-				const twEntry: any = extendedConfig[twType]
+				config[twType] ??= {} as Record<string, string> // just in case
 				const key = entry.name + entry.options.separator + twKey
-				if (isTopLevel) {
-					twEntry[""] = convertValueMap[type]?.(key, entry.interpolated[key], entry) ?? defaultConvert(twKey)
-				}
-				if (twName) {
-					twEntry[twName] ??= {}
-					twEntry[twName].DEFAULT = convertValueMap[type]?.(key, entry.interpolated[key], entry) ?? defaultConvert(twKey)
-				}
+				const v = convertValueMap[type]?.(key, entry.interpolated[key], entry) ?? defaultConvert(key, entry.interpolated[key], entry)
+				text.push(`\t${v}`)
 			}
 		} else if (entry instanceof ControlVar) {
 			if (excludeTw.includes(themeKeyName)) continue
 			const [type, twName] = splitName(themeKeyName, separator)
 			const twType = twTypeMap[type] ?? type
-			extendedConfig[twType] ??= {} as Record<string, string>
-			const twEntry: any = extendedConfig[twType]
-			if (twName === undefined) throw new Error(`theme key ${themeKeyName} must be named like {tailwindType}-{name}`)
-			twEntry[twName] = convertValueMap[type]?.(themeKeyName, entry.css, entry) ?? entry.css
+			config[twType] ??= {} as Record<string, string>
+			if (twName === undefined) throw new Error(`Theme ControlVar key ${themeKeyName} must be named like {tailwindType}-{name}`)
+			const v = convertValueMap[type]?.(twName, entry.css, entry) ?? defaultConvert(twName, entry.css, entry)
+			text.push(`\t${v}`)
 		}
 	}
-	const pluginFunc = ({ addBase }: PluginAPI): void => {
-		const res: Record<string, string> = {}
-		for (const [key, val] of Object.entries(themeInstance.value)) {
-			if (excludeCss.includes((val as any).name ?? key)) continue
-			// @ts-expect-error using protected method
-			themeInstance._generateCss(res, key, separator, val)
-		}
-		addBase({
-			":root": themeInstance.css,
-		})
-	}
-	return plugin(pluginFunc, { theme: { extend: extendedConfig } })
+	
+	text.push(`}`)
+	return text.join("\n")
 }
 
+export type TailwindPluginOptions = {
+	defaultsMap?: Record<string, string>
+	twTypeMap?: Record<string, string>
+	convertValueMap?: Record<string, (key: string, value: string, entry: InterpolatedVars | ControlVar) => string>
+	separator?: string
+	excludeTw?: string[]
+}

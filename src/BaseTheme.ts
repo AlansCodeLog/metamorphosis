@@ -6,12 +6,13 @@ import { InterpolatedVars } from "./InterpolatedVars.js"
 import { Theme } from "./Theme.js"
 import type { InterpolatedVarsOptions, Interpolator } from "./types.js"
 import * as Units from "./Units.js"
-import { createNumericalInterpolator, scaleValue, tailwindColorKeyNamer } from "./utils.js"
+import { tailwindColorKeyNamer } from "./utils.js"
 
 
 export const test = Object.fromEntries([["a", "a"]])
 
 // hsl for more saturated color mixing
+// todo update and move to oklch like tailwind?
 export const createColorJsIoInterpolator = (format: string = "srgb", space: string = "hsl"): Interpolator<ControlVar<any, Units.Str>> => ({ percent, state, start, end }) => {
 	const key = start.css + end.css
 	// re/create state if at start or if key switched (due to multiple gradient points)
@@ -26,26 +27,15 @@ export const createColorJsIoInterpolator = (format: string = "srgb", space: stri
 		.to(format)
 		.toString({ format })
 		.match(/\((.*?)\)/)[1]
-	return { _: val }
+	return { _: `rgb(${val})` }
 }
 
 const colorJsInterpolator = createColorJsIoInterpolator()
 
 
-export const spacingStart = new ControlVar(Units.rem, 1)
-export const twSpacingSteps = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.5, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 24]
+export const spacing = new ControlVar(Units.rem, {	_: 0.25 })
 
-export const twSpacingKeys = ["0", "0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "5", "6", "7", "8", "9", "10", "11", "12", "14", "16", "20", "24", "28", "32", "36", "40", "44", "48", "52", "56", "60", "64", "72", "80", "96"]
-
-export const spacing = new InterpolatedVars("spacing", Units.rem, [spacingStart], {
-	steps: twSpacingSteps,
-	interpolator: createNumericalInterpolator(scaleValue),
-	// indexes into array of default tailwind spacing steps
-	keyName: ({ i, name }) => `${name}-${twSpacingKeys[i]}`,
-	roundTo: false,
-})
-
-export const tailwindColorOpts = {
+export const tailwindColorOpts: Partial<InterpolatedVarsOptions<ControlVar<any, any>>> = {
 	interpolator: colorJsInterpolator,
 	keyName: tailwindColorKeyNamer,
 	steps: 11,
@@ -86,7 +76,7 @@ export const background = new ControlVar(Units.str, "99% 99% 99%")
 export const foreground = new ControlVar(Units.str, "1% 1% 1%")
 
 export const baseTheme = new Theme({
-	spacing,
+	"number-spacing": spacing,
 	bg,
 	"color-bg": background,
 	"color-fg": foreground,
