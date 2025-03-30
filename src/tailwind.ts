@@ -23,18 +23,29 @@ const defaultTailwindOpts: Required<TailwindPluginOptions> = {
 	convertValueMap: {},
 	separator: "-",
 	excludeTw: [],
-	defaultsMap: {}
+	defaultsMap: {},
+	topLevel: []
 }
 
 /**
  * Creates a static Tailwind V4 CSS config using the given theme. This ensures things look ok (at least with the static defaults) before the js is loaded that sets the final theme variables.
  *
- * Vars should have a naming scheme like `{tailwindType}-{name}` (e.g. `colors-red`), or for top level variables `{tailwindType}` (e.g. `spacing`).
+ * Vars should have a naming scheme like `{tailwindType}-{name}` (e.g. `colors-red`).
  *
  * For InterpolatedVars, `{name}` would be the instance's name. To name ControlVars, they should be added to the theme like so:
  *
  * ```
  * new Theme({"color-fancy-red": new ControlVar(...) })
+ * ```
+ *
+ * You can make a ControlVar top level so it's not prefixed with the type (e.g. `color`) by adding it to the topLevel option:
+ *
+ * ```
+ * new Theme({"number-spacing": new ControlVar(...) })
+ *
+ * createTailwindPlugin(baseTheme, {
+ * 	topLevel: ["number-spacing"] // will output `--spacing: ...`
+ * })
  * ```
  *
  * Since it's a bit weird to have variables named `--colors-red-000`, there is a `twTypeMap` option that allows you to map an extracted type to a tailwind config key. For example, you can pass `{color:"colors"}` to be able to call variables `color-*`.
@@ -86,6 +97,7 @@ export function themeAsTailwindCss(
 		separator,
 		excludeTw,
 		defaultsMap,
+		topLevel,
 	} = opts
 
 	const defaultConvert = (key: string, value: string, _entry: InterpolatedVars | ControlVar): string => `--${escapeKey(key, separator)}: ${value};`
@@ -120,7 +132,8 @@ export function themeAsTailwindCss(
 			const twType = twTypeMap[type] ?? type
 			config[twType] ??= {} as Record<string, string>
 			if (twName === undefined) throw new Error(`Theme ControlVar key ${themeKeyName} must be named like {tailwindType}-{name}`)
-			const v = convertValueMap[type]?.(twName, entry.css, entry) ?? defaultConvert(twName, entry.css, entry)
+			const keyName = topLevel?.includes(themeKeyName) ? twName : themeKeyName
+			const v = convertValueMap[type]?.(keyName, entry.css, entry) ?? defaultConvert(keyName, entry.css, entry)
 			text.push(`\t${v}`)
 		}
 	}
@@ -135,4 +148,5 @@ export type TailwindPluginOptions = {
 	convertValueMap?: Record<string, (key: string, value: string, entry: InterpolatedVars | ControlVar) => string>
 	separator?: string
 	excludeTw?: string[]
+	topLevel?: string[]
 }
