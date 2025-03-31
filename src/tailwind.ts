@@ -62,7 +62,7 @@ const defaultTailwindOpts: Required<TailwindPluginOptions> = {
  * import { escapeKey, createTailwindPlugin } from "metamorphosis/tailwind.js"
  * createTailwindPlugin(baseTheme, {
  * 	convertValueMap: {
- * 		color: (key, value, entry) => `...`,
+ * 		color: (key, value, entry) => ...
  * 	}
  *  })
  * ```

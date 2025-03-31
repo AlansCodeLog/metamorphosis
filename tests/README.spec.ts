@@ -118,24 +118,4 @@ it("works", () => {
 			return { r: val[0] * 255, g: val[1] * 255, b: val[0] * 255 }
 		},
 	})
-
-	// we can also be a bit more flexible at the cost of strict typing and
-	// use colorjs.io's parsing abilities to pass the colors as strings in any format
-
-	const white2 = new ControlVar(Units.str, `rgb(255, 255, 255)`)
-	const black2 = new ControlVar(Units.str, `#000000`)
-
-	const grays5 = new InterpolatedVars("gray", Units.str, [white2, black2], {
-		interpolator: ({ percent, state, start, end }) => {
-			const key = start.css + end.css
-			if (state.key !== key) {
-				state.range = new Color(start.css).range(new Color(end.css), { space: "srgb" })
-				state.key = key
-			}
-			/* ... */
-			return state.range(percent)
-				.to("srgb") // our preferred output space
-				.toString({ format: "srgb" })
-		},
-	})
 })

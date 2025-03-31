@@ -8,12 +8,14 @@ import type { InterpolatedVarsOptions, Interpolator } from "./types.js"
 import * as Units from "./Units.js"
 import { tailwindColorKeyNamer } from "./utils.js"
 
-
-export const test = Object.fromEntries([["a", "a"]])
-
-// hsl for more saturated color mixing
-// todo update and move to oklch like tailwind?
-export const createColorJsIoInterpolator = (format: string = "srgb", space: string = "hsl"): Interpolator<ControlVar<any, Units.Str>> => ({ percent, state, start, end }) => {
+// sometimes convertions return null for a value because of conversions/color spaces
+// thing is, I'm getting nulls when just doing ranges that should not return null (e.g. colors.neutral does this)
+// not 100% why, but the correct colors are just null => 0, so that's why this function
+function unsafeColorToOklch(color: Color): Units.Lch {
+	const c = color.oklch
+	return { l: c.l ?? 0, c: c.c ?? 0, h: c.h ?? 0 }
+}
+export const createColorJsIoInterpolator = (space?: string): Interpolator<ControlVar<any, Units.Lch>> => ({ percent, state, start, end }) => {
 	const key = start.css + end.css
 	// re/create state if at start or if key switched (due to multiple gradient points)
 	if (state.key !== key) {
@@ -23,11 +25,8 @@ export const createColorJsIoInterpolator = (format: string = "srgb", space: stri
 		state.key = key
 	}
 
-	const val = state.range(percent)
-		.to(format)
-		.toString({ format })
-		.match(/\((.*?)\)/)[1]
-	return { _: `rgb(${val})` }
+	const mixed: Color = state.range(percent)
+	return unsafeColorToOklch(mixed)
 }
 
 const colorJsInterpolator = createColorJsIoInterpolator()
@@ -40,18 +39,17 @@ export const tailwindColorOpts: Partial<InterpolatedVarsOptions<ControlVar<any, 
 	keyName: tailwindColorKeyNamer,
 	steps: 11,
 }
-// use Units.str to leverage colorio.js parsing abilities
-export const createTailwindColor = (name: string, stops: (string | Units.Str | [number, Units.Str])[], opts: Partial<InterpolatedVarsOptions> = {}): InterpolatedVars<Units.Str> => {
+export const createTailwindColor = (name: string, stops: (string)[], opts: Partial<InterpolatedVarsOptions> = {}): InterpolatedVars<Units.Lch> => {
 	const controls = []
-	for (const stop of stops) {
-		const control = new ControlVar(Units.str, Array.isArray(stop) ? stop[1] : (stop))
-		controls.push(Array.isArray(stop) ? [stop[0], control] : control)
+	for (const rawStop of stops) {
+		const stop = new Color(rawStop)
+		const control = new ControlVar<Units.Lch>(Units.oklch, unsafeColorToOklch(stop))
+		controls.push(control)
 	}
-	return new InterpolatedVars(name, Units.str, controls as any, { ...tailwindColorOpts, ...opts })
+	return new InterpolatedVars(name, Units.oklch, controls as any, { ...tailwindColorOpts, ...opts })
 }
 
 // for now just copies the tailwind colors
-// todo tweak as needed
 export const bg = createTailwindColor("color-neutral", [
 	...Object.values(colors.neutral),
 ])
@@ -71,9 +69,9 @@ export const accent = createTailwindColor("color-accent", [
 	...Object.values(colors.blue),
 ])
 
-export const background = new ControlVar(Units.str, "99% 99% 99%")
+export const background = new ControlVar<Units.Lch>(Units.oklch, unsafeColorToOklch(new Color("rgb(99% 99% 99%)")))
 
-export const foreground = new ControlVar(Units.str, "1% 1% 1%")
+export const foreground = new ControlVar<Units.Lch>(Units.oklch, unsafeColorToOklch(new Color("rgb(1% 1% 1%)")))
 
 export const baseTheme = new Theme({
 	"number-spacing": spacing,

@@ -20,8 +20,6 @@ export type Lab = { l: number, a: number, b: number, A?: number }
 export const lab = ({ l, a, b, A }: Lab): string => `lab(${l}, ${a}, ${b}${A !== undefined ? ` / ${A}` : ""})`
 export const oklab = (val: Parameters<typeof lab>[0]): string => `ok${lab(val)}`
 
-// export const createSimpleUnit = (suffix: string) => ({ _ }: { _: number }): string => `${_}${suffix}`
-// export const createSimpleUnit = <T extends number | string = number>(suffix: string) => ({ _ }: { _: T }): string => `${_}${suffix}`
 export const createSimpleUnit = <T extends number | string = number>(suffix: string) => ({ _ }: Record<"_", T>): string => `${_}${suffix}`
 
 export const px = createSimpleUnit("px")
