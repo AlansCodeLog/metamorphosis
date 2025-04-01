@@ -67,10 +67,10 @@ const theme = new Theme({
 })
 
 // theme.css
-// 	--gray-000: rgb(255, 255, 255);
-// 	--gray-250: rgb(204, 204, 204);
-// 	--gray-500: rgb(51, 51, 51);
-// 	--gray-750: rgb(0, 0, 0);
+// 	--gray-000: rgb(255 255 255);
+// 	--gray-250: rgb(204 204 204);
+// 	--gray-500: rgb(51 51 51);
+// 	--gray-750: rgb(0 0 0);
 // 	--padding-0: 0px;
 // 	...
 // 	--padding-9: 200px;
@@ -80,9 +80,9 @@ white.set({ r: 200, g: 200, b: 200 })
 
 // all variables that depend on it update
 // theme.css
-//		--gray-000: rgb(200, 200, 200);
+//		--gray-000: rgb(200 200 200);
 //		...
-//		--gray-750: rgb(0, 0, 0);
+//		--gray-750: rgb(0 0 0);
 
 // attach or detach a theme from an element
 // if none given attaches to document.documentElement

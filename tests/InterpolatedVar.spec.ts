@@ -72,13 +72,13 @@ it("object interpolation", () => {
 		{ r: 0, g: 0, b: 0 },
 	])
 	expect(grays.interpolated).to.deep.equal({
-		"gray-000": "rgb(255, 255, 255)",
-		"gray-500": "rgb(127.5, 127.5, 127.5)",
-		"gray-1000": "rgb(0, 0, 0)",
+		"gray-000": "rgb(255 255 255)",
+		"gray-500": "rgb(127.5 127.5 127.5)",
+		"gray-1000": "rgb(0 0 0)",
 	})
 
 	white.set({ r: 100, g: 100, b: 100 })
-	expect(grays.interpolated["gray-500"]).to.equal("rgb(50, 50, 50)")
+	expect(grays.interpolated["gray-500"]).to.equal("rgb(50 50 50)")
 })
 it("works with optional alpha units", () => {
 	const var1 = new ControlVar(Units.rgb, { r: 255, g: 255, b: 255, a: 1 })

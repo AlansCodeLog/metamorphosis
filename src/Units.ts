@@ -3,21 +3,21 @@
 
 export type Rgb = { r: number, g: number, b: number, a?: number }
 
-export const rgb = ({ r, g, b, a }: Rgb): string => `rgb(${r}, ${g}, ${b}${a !== undefined ? ` / ${a}` : ""})`
+export const rgb = ({ r, g, b, a }: Rgb): string => `rgb(${r} ${g} ${b}${a !== undefined ? ` / ${a}` : ""})`
 
 export type Hsl = { h: number, s: number, l: number, a?: number }
-export const hsl = ({ h, s, l, a }: Hsl): string => `hsl(${h}, ${s}%, ${l}%${a !== undefined ? ` / ${a}` : ""})`
+export const hsl = ({ h, s, l, a }: Hsl): string => `hsl(${h}deg ${s}% ${l}%${a !== undefined ? ` / ${a}` : ""})`
 
 export type Hwb = { h: number, w: number, b: number, a?: number }
-export const hwb = ({ h, w, b, a }: Hwb): string => `hwb(${h}, ${w}%, ${b}%${a !== undefined ? ` / ${a}` : ""})`
+export const hwb = ({ h, w, b, a }: Hwb): string => `hwb(${h}deg ${w}% ${b}%${a !== undefined ? ` / ${a}` : ""})`
 
 export type Lch = { l: number, c: number, h: number, a?: number }
-export const lch = ({ l, c, h, a }: Lch): string => `lch(${l}, ${c}, ${h}${a !== undefined ? ` / ${a}` : ""})`
+export const lch = ({ l, c, h, a }: Lch): string => `lch(${l} ${c} ${h}${a !== undefined ? ` / ${a}` : ""})`
 export const oklch = (val: Parameters<typeof lch>[0]): string => `ok${lch(val)}`
 
 export type Lab = { l: number, a: number, b: number, A?: number }
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export const lab = ({ l, a, b, A }: Lab): string => `lab(${l}, ${a}, ${b}${A !== undefined ? ` / ${A}` : ""})`
+export const lab = ({ l, a, b, A }: Lab): string => `lab(${l} ${a} ${b}${A !== undefined ? ` / ${A}` : ""})`
 export const oklab = (val: Parameters<typeof lab>[0]): string => `ok${lab(val)}`
 
 export const createSimpleUnit = <T extends number | string = number>(suffix: string) => ({ _ }: Record<"_", T>): string => `${_}${suffix}`
