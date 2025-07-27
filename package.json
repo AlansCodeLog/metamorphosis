@@ -27,7 +27,7 @@
 		"build:watch": "vite build --watch --mode development ",
 		"lint:eslint": "eslint \"{src,tests,bin}/**/*.{cjs,js,ts}\" \"*.{cjs,js,ts}\" --max-warnings=0 --report-unused-disable-directives",
 		"lint:types": "tsc --noEmit --pretty",
-		"lint:commits": "commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose",
+		"lint:commits": "commitlint --from-last-tag --to HEAD --verbose",
 		"lint:imports": "madge --circular --extensions ts ./src",
 		"lint": "pnpm lint:eslint",
 		"coverage": "vitest --coverage",
