@@ -62,14 +62,14 @@
 		"@alanscodelog/commitlint-config": "^3.1.2",
 		"@alanscodelog/eslint-config": "^5.0.4",
 		"@alanscodelog/semantic-release-config": "^5.0.4",
-		"@alanscodelog/tsconfigs": "^5.0.1",
+		"@alanscodelog/tsconfigs": "^6.0.0",
 		"@alanscodelog/vite-config": "^0.0.5",
-		"@commitlint/cli": "^19.8.0",
-		"@types/node": "^22.14.1",
+		"@commitlint/cli": "^19.8.1",
+		"@types/node": "^24.1.0",
 		"@vitest/coverage-c8": "^0.33.0",
 		"colorjs.io": "0.6.0-alpha.1",
-		"concurrently": "^9.1.2",
-		"cross-env": "^7.0.3",
+		"concurrently": "^9.2.0",
+		"cross-env": "^10.0.0",
 		"fast-glob": "^3.3.3",
 		"http-server": "^14.1.1",
 		"husky": "^9.1.7",
@@ -77,14 +77,14 @@
 		"jsdom": "^26.1.0",
 		"madge": "^8.0.0",
 		"onchange": "^7.1.0",
-		"semantic-release": "^24.2.3",
-		"tailwindcss": "^4.1.4",
+		"semantic-release": "^24.2.7",
+		"tailwindcss": "^4.1.11",
 		"ts-node": "^10.9.2",
-		"typedoc": "^0.28.3",
+		"typedoc": "^0.28.7",
 		"typescript": "^5.8.3",
-		"vite": "^6.3.2",
+		"vite": "^7.0.6",
 		"vite-plugin-externalize-deps": "^0.9.0",
-		"vitest": "^3.1.2"
+		"vitest": "^3.2.4"
 	},
 	"files": [
 		"src",
@@ -126,7 +126,7 @@
 		"peerDependencies": "colorsjs.io is only needed if using the base theme",
 		"scripts": {
 			"test": "Runs `lint:types` before (so that flags can be passed to the test command) so that we can test type assertions. See expect_type function in @alanscodelog/utils.",
-			"lint:commits": "Lints all unpushed commits in the active branch.",
+			"lint:commits": "commitlint --from-last-tag --to HEAD --verbose",
 			"prepare": "Needed so that if we pull the package from git it will get built and installed properly. The HUSKY stuff is a workaround for https://github.com/typicode/husky/issues/1213",
 			"actions:debug": "For debugging github build action locally with nektos/act. Requires act and docker. Note: Cache will never work locally because of https://github.com/nektos/act/issues/285"
 		}
