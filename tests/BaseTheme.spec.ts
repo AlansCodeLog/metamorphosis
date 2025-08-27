@@ -1,4 +1,4 @@
-import { keys } from "@alanscodelog/utils/keys.js"
+import { keys } from "@alanscodelog/utils/keys"
 import { expect, it } from "vitest"
 
 import { baseTheme } from "../src/BaseTheme.js"

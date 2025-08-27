@@ -1,4 +1,4 @@
-import { isBlank } from "@alanscodelog/utils/isBlank.js"
+import { isBlank } from "@alanscodelog/utils/isBlank"
 
 import { Base } from "./Base.js"
 import type { ControlVar } from "./ControlVar.js"

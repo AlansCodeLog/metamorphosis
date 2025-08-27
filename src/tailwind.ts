@@ -1,5 +1,5 @@
-import { castType } from "@alanscodelog/utils/castType.js"
-import { keys } from "@alanscodelog/utils/keys.js"
+import { castType } from "@alanscodelog/utils/castType"
+import { keys } from "@alanscodelog/utils/keys"
 
 import { ControlVar } from "./ControlVar.js"
 import { InterpolatedVars } from "./InterpolatedVars.js"

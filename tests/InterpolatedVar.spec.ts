@@ -1,4 +1,4 @@
-import { expectType } from "@alanscodelog/utils/expectType.js"
+import { expectType } from "@alanscodelog/utils/expectType"
 import { describe, expect, it } from "vitest"
 
 import { ControlVar } from "../src/ControlVar.js"
