@@ -17,8 +17,7 @@
 		},
 		"./*": {
 			"types": "./dist/*.d.ts",
-			"import": "./dist/*",
-			"require": "./dist/*"
+			"import": "./dist/*.js"
 		}
 	},
 	"scripts": {
@@ -121,7 +120,6 @@
 	],
 	"license": "MIT",
 	"@comments": {
-		"exports": "Tailwind won't work unless a require is added or I direct the subpath directly to the file. ???",
 		"peerDependencies": "colorsjs.io is only needed if using the base theme",
 		"scripts": {
 			"test": "Runs `lint:types` before (so that flags can be passed to the test command) so that we can test type assertions. See expect_type function in @alanscodelog/utils.",

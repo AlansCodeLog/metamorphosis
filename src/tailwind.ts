@@ -59,7 +59,7 @@ const defaultTailwindOpts: Required<TailwindPluginOptions> = {
  * You can change this per type by using the `convertValueMap` option.
  *
  * ```ts
- * import { escapeKey, createTailwindPlugin } from "metamorphosis/tailwind.js"
+ * import { escapeKey, createTailwindPlugin } from "metamorphosis/tailwind"
  * createTailwindPlugin(baseTheme, {
  * 	convertValueMap: {
  * 		color: (key, value, entry) => ...
